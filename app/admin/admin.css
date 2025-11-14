@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 .side-bar-item{
-  @apply p-2 hover:bg-secondary rounded-md text-white flex gap-2 items-center text-lg font-semibold
+  @apply p-2 hover:bg-secondary rounded-md text-white flex gap-2 items-center text-base font-semibold
 }
 .side-bar-item-active {
   @apply bg-secondary

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { clientSideFetch } from '@/app/lib/api/apiClient';
 import { ADMIN_API_PATHS } from '@/app/lib/constants/api';
 import { UserModel } from '@/app/lib/definitions';
@@ -24,42 +24,42 @@ export default function Page() {
   // Pagination settings
   const pageSize = 10;
 
-  const fetchUsers = async (page = 1, search = '') => {
-    setLoading(true);
-    try {
-      // Using the admin users API endpoint
-      const response = await clientSideFetch<UserModel[]>(
-        `${ADMIN_API_PATHS.USERS}?page=${page}&pageSize=${pageSize}${search ? `&search=${search}` : ''}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+  const fetchUsers = useCallback(
+    async (page = 1, search = '') => {
+      setLoading(true);
+      try {
+        // Using the admin users API endpoint
+        const response = await clientSideFetch<UserModel[]>(
+          `${ADMIN_API_PATHS.USERS}?page=${page}&pageSize=${pageSize}${search ? `&search=${search}` : ''}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (response.error) {
+          toast.error('Failed to load users: ' + response.error.details);
+          return;
         }
-      );
+        console.log(response.data);
 
-      if (response.error) {
-        toast.error('Failed to load users: ' + response.error.details);
-        return;
+        setUsers(response.data || []);
+
+        // If pagination data is available in the response
+        if (response.pagination) {
+          setTotalPages(Math.ceil(response.pagination.total / pageSize));
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        toast.error('An error occurred while loading users');
+      } finally {
+        setLoading(false);
       }
-
-      setUsers(response.data || []);
-
-      // If pagination data is available in the response
-      if (response.pagination) {
-        setTotalPages(Math.ceil(response.pagination.total / pageSize));
-      }
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      toast.error('An error occurred while loading users');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchUsers(currentPage, searchInput);
-  }, [currentPage]);
+    },
+    [pageSize]
+  );
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,8 +96,13 @@ export default function Page() {
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
+      fetchUsers(newPage, searchInput);
     }
   };
+  useEffect(() => {
+    fetchUsers(1, '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading && users.length === 0) {
     return <Loading />;
@@ -176,20 +181,20 @@ export default function Page() {
                   <td className='px-6 py-4 font-medium text-gray-900 whitespace-nowrap'>
                     {user.id.substring(0, 8)}...
                   </td>
-                  <td className='px-6 py-4'>{user.fullname}</td>
+                  <td className='px-6 py-4'>{user.firstName}</td>
                   <td className='px-6 py-4'>{user.username}</td>
                   <td className='px-6 py-4'>{user.email}</td>
                   <td className='px-6 py-4'>
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.role === 'admin'
+                        user.roleCode === 'admin'
                           ? 'bg-purple-100 text-purple-800'
-                          : user.role === 'moderator'
+                          : user.roleCode === 'moderator'
                             ? 'bg-blue-100 text-blue-800'
                             : 'bg-green-100 text-green-800'
                       }`}
                     >
-                      {user.role}
+                      {user.roleCode}
                     </span>
                   </td>
                   <td className='px-6 py-4'>
@@ -234,7 +239,7 @@ export default function Page() {
                         }}
                         className='font-medium text-red-600 hover:underline'
                         // Prevent deleting admin users or your own account
-                        disabled={user.role === 'admin'}
+                        disabled={user.roleCode === 'admin'}
                       >
                         Delete
                       </button>
@@ -300,7 +305,7 @@ export default function Page() {
       <ConfirmDialog
         open={showDeleteDialog}
         title='Delete User'
-        message={`Are you sure you want to delete the user "${selectedUser?.fullname || selectedUser?.username}"? This action cannot be undone.`}
+        message={`Are you sure you want to delete the user "${selectedUser?.firstName || selectedUser?.username}"? This action cannot be undone.`}
         onClose={() => {
           setShowDeleteDialog(false);
           setSelectedUser(null);

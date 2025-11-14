@@ -16,9 +16,12 @@ import { useUser } from '@/app/hooks';
 
 // Profile form schema
 const profileSchema = z.object({
-  fullname: z
+  firstName: z
     .string()
-    .min(3, { message: 'Full name must be at least 3 characters' }),
+    .min(3, { message: 'First name must be at least 3 characters' }),
+  lastName: z
+    .string()
+    .min(3, { message: 'Last name must be at least 3 characters' }),
   email: z.string().email({ message: 'Please enter a valid email address' }),
   phone: z
     .string()
@@ -42,7 +45,7 @@ export default function PersonalInfoTab() {
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      fullname: '',
+      firstName: '',
       email: '',
       phone: '',
     },
@@ -52,7 +55,7 @@ export default function PersonalInfoTab() {
   useEffect(() => {
     if (user) {
       resetProfileForm({
-        fullname: user.fullname,
+        firstName: user.firstName,
         email: user.email,
         phone: user.phone || '',
       });
@@ -68,7 +71,7 @@ export default function PersonalInfoTab() {
           method: 'PATCH',
           body: {
             userId: user?.id,
-            fullname: data.fullname,
+            firstName: data.firstName,
             email: data.email,
             // phone: data.phone, // Add if your API supports phone updates
           },
@@ -141,10 +144,10 @@ export default function PersonalInfoTab() {
           <div className='grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6'>
             <div className='sm:col-span-3'>
               <TextField
-                {...registerProfile('fullname')}
+                {...registerProfile('firstName')}
                 label='Full name'
                 placeholder='John Doe'
-                error={profileErrors.fullname?.message}
+                error={profileErrors.firstName?.message}
               />
             </div>
             <div className='sm:col-span-3'>
@@ -186,7 +189,7 @@ export default function PersonalInfoTab() {
           <dl className='grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2'>
             <div>
               <dt className='text-sm font-medium text-gray-500'>Full name</dt>
-              <dd className='mt-1 text-sm text-gray-900'>{user?.fullname}</dd>
+              <dd className='mt-1 text-sm text-gray-900'>{user?.firstName}</dd>
             </div>
             <div>
               <dt className='text-sm font-medium text-gray-500'>Username</dt>

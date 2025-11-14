@@ -34,7 +34,8 @@ export const SignupFormSchema = z
   .object({
     username: z.string().min(3).max(255),
     email: z.string().email(),
-    fullname: z.string().min(3).max(255),
+    firstName: z.string().min(3).max(255),
+    lastName: z.string().min(3).max(255),
     phone: z.string().min(10).max(10),
     password: z.string().min(6).max(255),
     confirmPassword: z.string().min(6).max(255),
@@ -50,7 +51,8 @@ export type SignupFormState =
       data?: SignupFormData;
       errors?: {
         email?: string[];
-        fullname?: string[];
+        firstName?: string[];
+        lastName?: string[];
         phone?: string[];
         username?: string[];
         password?: string[];
@@ -65,16 +67,19 @@ export const registerSchema = z
     username: z.string().min(3).max(20),
     email: z.string().email(),
     phone: z.string().min(10).max(15),
-    fullname: z.string().min(3).max(100),
-    password: z.string().min(8).max(100),
-    confirmPassword: z.string().min(8).max(100),
-    address: z.object({
-      street: z.string().min(3).max(100),
-      city: z.string().min(3).max(50),
-      phone: z.string().min(10).max(15),
-      district: z.string().min(2).max(50),
-      ward: z.string().min(1).max(50).optional(),
-    }).optional(),
+    firstName: z.string().min(3).max(100),
+    lastName: z.string().min(3).max(100),
+    password: z.string().min(6).max(100),
+    confirmPassword: z.string().min(6).max(100),
+    address: z
+      .object({
+        street: z.string().min(3).max(100),
+        city: z.string().min(3).max(50),
+        phone: z.string().min(10).max(15),
+        district: z.string().min(2).max(50),
+        ward: z.string().min(1).max(50).optional(),
+      })
+      .optional(),
   })
   .superRefine((data) => {
     if (data.password !== data.confirmPassword) {

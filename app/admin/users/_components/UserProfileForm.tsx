@@ -6,28 +6,17 @@ import { useRouter } from 'next/navigation';
 import { clientSideFetch } from '@/app/lib/api/apiClient';
 import { ADMIN_API_PATHS } from '@/app/lib/constants/api';
 import { toast } from 'react-toastify';
+import { UserModel } from '@/app/lib/definitions';
 
-interface UserDetails {
-  id: string;
-  email: string;
-  fullname: string;
-  phone: string;
-  role: string;
-  createdAt: string;
-  updatedAt: string;
-  locked: boolean;
-  avatarUrl: string | null;
-  avatarImageId: string | null;
-}
-
-export default function UserProfileForm({ user }: { user: UserDetails }) {
+export default function UserProfileForm({ user }: { user: UserModel }) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState({
-    fullname: user.fullname,
+    firstName: user.firstName,
     email: user.email,
     phone_number: user.phone || '',
-    role: user.role,
+    roleId: user.roleId,
+    roleCode: user.roleCode,
   });
   const [loading, setLoading] = useState(false);
   const [avatar, setAvatar] = useState<File | null>(null);
@@ -97,7 +86,7 @@ export default function UserProfileForm({ user }: { user: UserDetails }) {
       toast.success('User profile updated successfully');
       setIsEditing(false);
       router.refresh();
-    } catch (error: any) {
+    } catch (error) {
       toast.error(
         error.details || 'An error occurred while updating the profile'
       );
@@ -131,7 +120,7 @@ export default function UserProfileForm({ user }: { user: UserDetails }) {
             ) : (
               <div className='flex items-center justify-center h-full bg-indigo-100 text-indigo-500'>
                 <span className='text-2xl font-medium'>
-                  {user.fullname
+                  {user.firstName
                     .split(' ')
                     .map((e) => e.charAt(0))
                     .join('')}
@@ -172,7 +161,7 @@ export default function UserProfileForm({ user }: { user: UserDetails }) {
               type='text'
               name='first_name'
               id='first_name'
-              value={userData.fullname}
+              value={userData.firstName}
               onChange={handleInputChange}
               disabled={!isEditing}
               className={`mt-1 block w-full shadow-sm sm:text-sm rounded-md ${
@@ -194,7 +183,7 @@ export default function UserProfileForm({ user }: { user: UserDetails }) {
               type='text'
               name='last_name'
               id='last_name'
-              value={userData.fullname}
+              value={userData.firstName}
               onChange={handleInputChange}
               disabled={!isEditing}
               className={`mt-1 block w-full shadow-sm sm:text-sm rounded-md ${
@@ -251,15 +240,15 @@ export default function UserProfileForm({ user }: { user: UserDetails }) {
 
           <div>
             <label
-              htmlFor='role'
+              htmlFor='role_id'
               className='block text-sm font-medium text-gray-700'
             >
               Role
             </label>
             <select
-              id='role'
-              name='role'
-              value={userData.role}
+              id='role_id'
+              name='role_id'
+              value={userData.roleId}
               onChange={handleInputChange}
               disabled={!isEditing}
               className={`mt-1 block w-full py-2 px-3 border ${

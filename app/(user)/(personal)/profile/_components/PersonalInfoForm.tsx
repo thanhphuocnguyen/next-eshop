@@ -9,7 +9,10 @@ import { z } from 'zod';
 
 // Profile form schema
 const profileSchema = z.object({
-  fullname: z
+  firstName: z
+    .string()
+    .min(3, { message: 'Full name must be at least 3 characters' }),
+  lastName: z
     .string()
     .min(3, { message: 'Full name must be at least 3 characters' }),
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -36,7 +39,8 @@ export default function PersonalInfoForm({
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      fullname: userData?.fullname || '',
+      firstName: userData?.firstName || '',
+      lastName: userData?.lastName || '',
       email: userData?.email || '',
       phone: userData?.phone || '',
     },
@@ -47,10 +51,18 @@ export default function PersonalInfoForm({
       <div className='grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6'>
         <div className='sm:col-span-3'>
           <TextField
-            {...register('fullname')}
-            label='Full name'
-            placeholder='John Doe'
-            error={errors.fullname?.message}
+            {...register('firstName')}
+            label='First name'
+            placeholder='John'
+            error={errors.firstName?.message}
+          />
+        </div>
+        <div className='sm:col-span-3'>
+          <TextField
+            {...register('lastName')}
+            label='Last name'
+            placeholder='Doe'
+            error={errors.lastName?.message}
           />
         </div>
         <div className='sm:col-span-3'>

@@ -43,9 +43,9 @@ export default function AdminNavbar() {
             {({ open }) => (
               <>
                 <div className='account-avatar'>
-                  {user?.fullname ? (
+                  {user?.firstName ? (
                     <span className='font-medium'>
-                      {user.fullname.charAt(0).toUpperCase()}
+                      {user.firstName.charAt(0).toUpperCase()}
                     </span>
                   ) : (
                     <UserCircleIcon height={16} width={16} />
@@ -53,7 +53,7 @@ export default function AdminNavbar() {
                 </div>
                 <div className='flex flex-col items-start'>
                   <span className='text-sm font-semibold truncate max-w-[120px]'>
-                    {user?.fullname || 'User'}
+                    {user?.firstName || 'User'}
                   </span>
                   <span className='text-xs text-gray-500 truncate max-w-[120px]'>
                     {user?.email || 'user@example.com'}

@@ -18,7 +18,7 @@ import {
   Transition,
 } from '@headlessui/react';
 import clsx from 'clsx';
-import { capitalize } from '@/app/lib/utils';
+import { capitalize } from '@/app/utils';
 
 interface ProductImagesUploaderProps {
   productDetail?: ProductDetailModel;

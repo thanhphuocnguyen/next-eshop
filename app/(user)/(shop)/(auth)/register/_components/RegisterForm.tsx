@@ -94,13 +94,22 @@ export default function RegisterFormComponent() {
           error={errors.email?.message}
         />
         <TextField
-          {...register('fullname')}
-          name='fullname'
+          {...register('firstName')}
+          name='firstName'
           type='text'
           icon={<FaIdCard />}
-          placeholder='John Doe'
-          label='Full Name'
-          error={errors.fullname?.message}
+          placeholder='John'
+          label='First Name'
+          error={errors.firstName?.message}
+        />
+        <TextField
+          {...register('lastName')}
+          name='lastName'
+          type='text'
+          icon={<FaIdCard />}
+          placeholder='Doe'
+          label='Last Name'
+          error={errors.lastName?.message}
         />
         <TextField
           {...register('phone')}

@@ -46,7 +46,7 @@ export const ShippingInformationSection: React.FC<
               {user.addresses.map((address) => (
                 <option key={address.id} value={address.id}>
                   {address.street}, {address.district}, {address.city}
-                  {address.default ? ' (Default)' : ''}
+                  {address.isDefault ? ' (Default)' : ''}
                 </option>
               ))}
               <option value='-1'>+ Add new address</option>
@@ -66,7 +66,8 @@ export const ShippingInformationSection: React.FC<
       )}
 
       <div className='grid grid-cols-2 gap-6 mt-4'>
-        <TextField {...register('fullname')} type='text' label='Full name' />
+        <TextField {...register('firstName')} type='text' label='First name' />
+        <TextField {...register('lastName')} type='text' label='Last name' />
         <TextField
           className=''
           {...register('address.street')}

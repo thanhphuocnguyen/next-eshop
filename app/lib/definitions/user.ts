@@ -1,8 +1,13 @@
 export type UserModel = {
   id: string;
-  role: string;
+  roleId: string;
+  roleCode: string;
   username: string;
-  fullname: string;
+  firstName: string;
+  locked: boolean;
+  avatarImageId?: string;
+  avatarUrl?: string;
+  lastName: string;
   email: string;
   phone: string;
   createdAt?: Date;
@@ -10,6 +15,7 @@ export type UserModel = {
   verifiedPhone?: boolean;
   updatedAt?: Date;
   passwordChangedAt?: Date;
+  lastLoginAt?: Date;
   addresses?: AddressModel[];
 };
 
@@ -20,5 +26,5 @@ export type AddressModel = {
   ward?: string;
   district: string;
   city: string;
-  default: boolean;
+  isDefault: boolean;
 };

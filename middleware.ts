@@ -5,9 +5,10 @@ import { GenericResponse } from './app/lib/definitions';
 import { jwtDecode, JwtPayload } from 'jwt-decode';
 
 export type JwtModel = {
-  role: string;
+  roleCode: string;
+  roleId: string;
   username: string;
-  user_id: string;
+  userId: string;
   id: string;
 } & JwtPayload;
 
@@ -55,7 +56,7 @@ export async function middleware(request: NextRequest) {
   }
   if (path.startsWith(AdminPath) && accessToken) {
     const decode = jwtDecode<JwtModel>(accessToken || '');
-    if (decode['role'] !== 'admin') {
+    if (decode['roleCode'] !== 'admin') {
       return NextResponse.redirect(new URL('/not-found', request.nextUrl));
     }
   }

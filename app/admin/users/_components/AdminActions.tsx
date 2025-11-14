@@ -1,21 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { clientSideFetch } from '@/app/lib/api/apiClient';
 import { ADMIN_API_PATHS } from '@/app/lib/constants/api';
-import { Dialog, DialogBackdrop } from '@headlessui/react';
+import {
+  Description,
+  Dialog,
+  DialogBackdrop,
+  DialogTitle,
+} from '@headlessui/react';
 import { toast } from 'react-toastify';
+import { UserModel } from '@/app/lib/definitions';
 
-interface UserDetails {
-  id: string;
-  email: string;
-  fullname: string;
-  role: string;
-  locked: boolean;
-}
-
-export default function AdminActions({ user }: { user: UserDetails }) {
+export default function AdminActions({ user }: { user: UserModel }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -130,7 +129,7 @@ export default function AdminActions({ user }: { user: UserDetails }) {
   return (
     <div className='space-y-4'>
       {/* Show promote button only if user is not already an admin or moderator */}
-      {user.role !== 'admin' && user.role !== 'moderator' && (
+      {user.roleCode !== 'admin' && user.roleCode !== 'moderator' && (
         <button
           onClick={() => setShowPromoteModal(true)}
           disabled={loading}
@@ -190,14 +189,14 @@ export default function AdminActions({ user }: { user: UserDetails }) {
           <DialogBackdrop className='fixed inset-0 bg-black opacity-30' />
 
           <div className='relative bg-white rounded-lg max-w-md w-full mx-auto p-6 shadow-xl'>
-            <Dialog.Title className='text-lg font-medium text-gray-900'>
+            <DialogTitle className='text-lg font-medium text-gray-900'>
               Promote User to Moderator
-            </Dialog.Title>
-            <Dialog.Description className='mt-2 text-sm text-gray-500'>
-              Are you sure you want to promote {user.fullname} to a Moderator
+            </DialogTitle>
+            <Description className='mt-2 text-sm text-gray-500'>
+              Are you sure you want to promote {user.firstName} to a Moderator
               role? This will give them additional permissions to manage content
               and users.
-            </Dialog.Description>
+            </Description>
 
             <div className='mt-6 flex space-x-4 justify-end'>
               <button
@@ -274,7 +273,7 @@ export default function AdminActions({ user }: { user: UserDetails }) {
             </Dialog.Title>
             <Dialog.Description className='mt-2 text-sm text-gray-500'>
               Are you sure you want to delete this user? This action cannot be
-              undone and will remove all data associated with {user.fullname}.
+              undone and will remove all data associated with {user.firstName}.
             </Dialog.Description>
 
             <div className='mt-6 flex space-x-4 justify-end'>

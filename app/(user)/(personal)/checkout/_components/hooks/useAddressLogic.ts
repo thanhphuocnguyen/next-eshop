@@ -65,7 +65,8 @@ export const useAddressLogic = ({ user, setValue, reset }: UseAddressLogicProps)
     if (user) {
       const defaultValue: Partial<CheckoutFormValues> = {
         email: user.email,
-        fullname: user.fullname,
+        firstName: user.firstName,
+        lastName: user.lastName,
         paymentMethod: 'cod',
         discountCode: '',
         termsAccepted: false,
@@ -73,7 +74,7 @@ export const useAddressLogic = ({ user, setValue, reset }: UseAddressLogicProps)
 
       if (user.addresses && user.addresses.length > 0) {
         const defaultAddress =
-          user.addresses.find((addr) => addr.default) || user.addresses[0];
+          user.addresses.find((addr) => addr.isDefault) || user.addresses[0];
         defaultValue.addressId = defaultAddress.id;
         defaultValue.address = {
           street: defaultAddress.street,
