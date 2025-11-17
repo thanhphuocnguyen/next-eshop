@@ -1,21 +1,22 @@
 import { badRequestHandler } from '@/app/utils';
 import { GenericResponse } from '../definitions/index';
 import { refreshTokenAction } from '@/app/actions/auth';
+import Cookies from 'js-cookie';
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-  body?: Record<string, any> | FormData;
+  body?: Record<string, unknown> | FormData;
   headers?: Record<string, string>;
   authToken?: string;
   nextOptions?: RequestInit;
   retryOnUnauthorized?: boolean;
-  req?: any; // For SSR cookie access
-  res?: any;
-  queryParams?: Record<string, any>; // Added queryParams option
+  req?: unknown; // For SSR cookie access
+  res?: unknown;
+  queryParams?: Record<string, unknown>; // Added queryParams option
 };
 
 // Helper function to serialize query parameters
-function serializeQueryParams(params: Record<string, any>): string {
+function serializeQueryParams(params: Record<string, unknown>): string {
   if (!params || Object.keys(params).length === 0) return '';
 
   const searchParams = new URLSearchParams();
@@ -39,7 +40,7 @@ function serializeQueryParams(params: Record<string, any>): string {
   return searchParams.toString();
 }
 
-export async function clientSideFetch<T = any>(
+export async function clientSideFetch<T = unknown>(
   endpoint: string,
   {
     method = 'GET',
@@ -65,7 +66,7 @@ export async function clientSideFetch<T = any>(
 
   const isFormData = body instanceof FormData;
 
-  const token = localStorage.getItem('accessToken');
+  const token = Cookies.get('accessToken');
   const finalHeaders: Record<string, string> = {
     ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -79,25 +80,62 @@ export async function clientSideFetch<T = any>(
     ...nextOptions,
   });
 
-  if (response.status === 401 && retryOnUnauthorized) {
-    const newToken = await refreshTokenAction();
-    if (newToken) {
-      localStorage.setItem('accessToken', newToken);
-      return clientSideFetch<T>(endpoint, {
-        method,
-        body,
-        headers,
-        nextOptions,
-        retryOnUnauthorized: false,
-        req,
-        res,
-      });
+  if (response.status === 401) {
+    if (retryOnUnauthorized) {
+      const newToken = await refreshTokenAction();
+      if (newToken) {
+        return clientSideFetch<T>(endpoint, {
+          method,
+          body,
+          headers,
+          nextOptions,
+          retryOnUnauthorized: false,
+          req,
+          res,
+        });
+      } else {
+        Cookies.remove('accessToken');
+        Cookies.remove('refreshToken');
+        Cookies.remove('sessionId');
+        throw new Error('Authentication refresh failed: no new token');
+      }
     } else {
-      throw new Error('Unauthorized, redirecting to login');
+      Cookies.remove('accessToken');
+      Cookies.remove('refreshToken');
+      Cookies.remove('sessionId');
+      throw new Error('Authentication refresh failed: unauthorized');
     }
   }
 
   badRequestHandler(response);
 
-  return response.json();
+  // Check if response has a JSON Content-Type and is not empty before parsing
+  const contentType = response.headers.get('Content-Type') || '';
+  if (contentType.includes('application/json')) {
+    // Handle empty response body (204 No Content, etc.)
+    const text = await response.text();
+    if (!text) {
+      // Return an empty object or null, depending on your API contract
+      return {} as GenericResponse<T>;
+    }
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      // If JSON parsing fails, return a consistent error structure
+      return {
+        success: false,
+        data: null,
+        error: 'Invalid JSON response',
+      } as unknown as GenericResponse<T>;
+    }
+  } else {
+    // For non-JSON responses, return as text or a consistent error structure
+    const text = await response.text();
+    return {
+      success: false,
+      data: null,
+      error: 'Response is not JSON',
+      raw: text,
+    } as unknown as GenericResponse<T>;
+  }
 }

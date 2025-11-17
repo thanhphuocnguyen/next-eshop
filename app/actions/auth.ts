@@ -27,6 +27,7 @@ export async function refreshTokenAction() {
   const data = (await response.json()) as GenericResponse<RefreshTokenResponse>;
 
   if (data.error) {
+    console.log('hello');
     cookieStore.delete('accessToken');
     cookieStore.delete('refreshToken');
     cookieStore.delete('sessionId');

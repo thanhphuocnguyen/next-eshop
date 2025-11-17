@@ -18,6 +18,7 @@ export default function AdminCategoryDetail({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+
   const { data: category, isLoading } = useSWR(
     ADMIN_API_PATHS.CATEGORY.replaceAll(':id', id),
     async (url) => {
@@ -76,7 +77,7 @@ export default function AdminCategoryDetail({
         title='Category Detail'
       />
 
-      <CategoryProductList products={category?.products ?? []} />
+      <CategoryProductList products={[]} />
     </div>
   );
 }

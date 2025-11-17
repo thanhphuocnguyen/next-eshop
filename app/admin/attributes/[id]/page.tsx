@@ -1,64 +1,48 @@
 'use client';
 
 import { ADMIN_API_PATHS } from '@/app/lib/constants/api';
-import { AttributeFormModel, AttributeFormSchema } from '@/app/lib/definitions';
+import {
+  AttributeFormModel,
+  AttributeFormSchema,
+  AttributeValueModel,
+} from '@/app/lib/definitions';
 
-import { Button, Field, Fieldset, Input, Label } from '@headlessui/react';
+import { Button, Input } from '@headlessui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import clsx from 'clsx';
-import { use, useEffect } from 'react';
-import { FormProvider, useFieldArray, useForm } from 'react-hook-form';
+import { use, useEffect, useState } from 'react';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import useSWR from 'swr';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import ValueItem from './_components/ValueItem';
 import { clientSideFetch } from '@/app/lib/api/apiClient';
+import { AttrValueModal } from './_components/AddValueModal';
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   const form = useForm<AttributeFormModel>({
     resolver: zodResolver(AttributeFormSchema),
     defaultValues: {
       name: '',
-      values: [
-        {
-          code: '',
-          name: '',
-          displayOrder: 1,
-          isActive: true,
-        },
-      ],
+      values: [],
     },
   });
 
+  // Modal state
+  const [selectedVal, setSelectedVal] = useState<undefined | null | number>(
+    undefined
+  );
+
+  const [selectedValue, setSelectedValue] = useState<string | undefined>(
+    undefined
+  );
   const { register, control, reset, handleSubmit } = form;
 
-  const { fields, append, remove, replace } = useFieldArray({
+  const { fields, update, append, remove } = useFieldArray({
     control,
     name: 'values',
-    keyName: 'key',
+    keyName: 'fieldId',
   });
 
   const { data: attribute } = useSWR(
@@ -77,12 +61,69 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     }
   );
 
-  async function submitHandler(data: AttributeFormModel) {
-    data.values = data.values?.map((item, i) => ({
-      ...item,
-      displayOrder: i + 1,
-    }));
+  async function onAdd(value: string) {
+    try {
+      const resp = await clientSideFetch<AttributeValueModel>(
+        ADMIN_API_PATHS.CREATE_ATTRIBUTE_VALUE.replace(':id', id),
+        {
+          method: 'POST',
+          body: { value: value },
+        }
+      );
 
+      const val = resp.data;
+      append({ id: val.id, value: val.value || '' });
+      toast.success('Value added successfully');
+    } catch (error) {
+      console.log(error);
+      toast.error('Failed to add value');
+    }
+  }
+
+  async function onUpdate(value: string) {
+    if (!selectedVal) return;
+    const idx = fields.findIndex((f) => f.id === selectedVal);
+    try {
+      const resp = await clientSideFetch<AttributeValueModel>(
+        ADMIN_API_PATHS.UPDATE_ATTRIBUTE_VALUE.replace(':id', id).replace(
+          ':valueId',
+          selectedVal.toString()
+        ),
+        {
+          method: 'PUT',
+          body: { value: value },
+        }
+      );
+      const val = resp.data;
+      update(idx, { id: val.id, value: val.value || '' });
+      setSelectedVal(undefined);
+      toast.success('Value updated successfully');
+    } catch (error) {
+      console.log(error);
+      toast.error('Failed to update value');
+    }
+  }
+
+  async function onRemove(idx: number) {
+    try {
+      await clientSideFetch(
+        ADMIN_API_PATHS.DELETE_ATTRIBUTE_VALUE.replace(':id', id).replace(
+          ':valueId',
+          fields[idx].id!.toString()
+        ),
+        {
+          method: 'DELETE',
+        }
+      );
+      toast.success('Value removed successfully');
+      setSelectedVal(undefined);
+      setSelectedValue(undefined);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function submitHandler(data: AttributeFormModel) {
     const response = await clientSideFetch<AttributeFormModel>(
       ADMIN_API_PATHS.ATTRIBUTE.replace(':id', id),
       {
@@ -105,110 +146,99 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   }, [attribute, reset]);
 
   return (
-    <div className='p-5 bg-white overflow-y-auto'>
+    <div style={{ padding: 20 }}>
       <Link
-        className='flex text-sky-500 hover:underline underline-offset-1'
         href='/admin/attributes'
+        className='inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm mb-4'
       >
-        <ArrowLeftIcon className='h-5 w-5 mr-2' />
-        <span className='hidden md:inline'>Back to </span>
-        Attributes
+        <ArrowLeftIcon style={{ width: 20, height: 20, marginRight: 8 }} />
+        Back to Attributes
       </Link>
-      <Fieldset
-        as='form'
-        className='w-full'
-        onSubmit={handleSubmit(submitHandler, (err) => {
-          console.log(err);
-        })}
-      >
-        <FormProvider {...form}>
-          <div className='flex justify-between mb-5'>
-            <h1 className='text-lg font-bold text-primary'>Attribute Edit</h1>
-            <Button type='submit' className={clsx('btn btn-primary')}>
-              Update
+      <form onSubmit={handleSubmit(submitHandler)}>
+        <div style={{ marginBottom: 16 }}>
+          <label className='block text-sm font-medium text-gray-700 mb-2'>
+            Name
+          </label>
+          <Input
+            {...register('name')}
+            className='block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500'
+          />
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <label className='text-sm font-medium text-gray-700'>Values</label>
+            <Button
+              type='button'
+              onClick={() => setSelectedVal(null)}
+              className='px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
+            >
+              Add Value
             </Button>
           </div>
-
-          <Field>
-            <Label className='text-sm/6 font-semibold'>Name</Label>
-            <Input
-              {...register('name')}
-              className={clsx(
-                'mt-1 block w-full rounded-lg border border-form-field-outline bg-white h-12 py-1.5 px-3 text-sm/6 text-form-field-contrast-text',
-                'focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-form-field-outline-hover'
-              )}
-            />
-          </Field>
-
-          <Field className='mt-4'>
-            <div className='flex items-center justify-between'>
-              <Label className='text-sm/6 font-semibold'>Values</Label>
-              <Button
-                type='button'
-                onClick={() =>
-                  append({
-                    code: '',
-                    name: '',
-                    displayOrder: fields.length,
-                    isActive: true,
-                  })
-                }
-                className='btn btn-primary'
-              >
-                Add Value
-              </Button>
-            </div>
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <Field as='ul' className='mt-2 gap-4 w-full'>
-                <SortableContext
-                  items={fields.map((item) => item.key)}
-                  id='key'
-                  strategy={verticalListSortingStrategy}
+          <ul style={{ marginTop: 8 }}>
+            {fields.map((value, idx) => {
+              return (
+                <li
+                  key={value.fieldId}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginBottom: 8,
+                    padding: '12px',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    backgroundColor: '#f9fafb',
+                  }}
                 >
-                  {fields.map((item, idx) => (
-                    <ValueItem
-                      item={item}
-                      remove={remove}
-                      id={item.key}
-                      idx={idx}
-                      key={item.key}
-                    />
-                  ))}
-                </SortableContext>
-              </Field>
-            </DndContext>
-          </Field>
-        </FormProvider>
-      </Fieldset>
+                  <span className='flex-1 text-sm font-medium text-gray-900'>
+                    {value.value}
+                  </span>
+                  <Button
+                    type='button'
+                    onClick={() => {
+                      setSelectedVal(value.id);
+                      setSelectedValue(value.value);
+                    }}
+                    className='px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 border border-blue-300 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    type='button'
+                    onClick={() => {
+                      onRemove(idx).then(() => {
+                        remove(idx);
+                      });
+                    }}
+                    className='px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 border border-red-300 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
+                  >
+                    Remove
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </form>
+
+      {/* Add Value Modal */}
+      {selectedVal !== undefined && (
+        <AttrValueModal
+          valId={selectedVal}
+          onSubmit={selectedVal === null ? onAdd : onUpdate}
+          value={selectedValue}
+          onClose={() => {
+            setSelectedVal(undefined);
+          }}
+        />
+      )}
     </div>
   );
-
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-
-    if (active.id !== over?.id) {
-      const oldIndex = fields.findIndex((item) => item.key === active.id);
-      const newIndex = fields.findIndex((item) => item.key === over?.id);
-
-      if (oldIndex !== -1 && newIndex !== -1) {
-        // Create a new array with the moved item in the correct position
-        const updatedFields = [...fields];
-        const [movedItem] = updatedFields.splice(oldIndex, 1);
-        updatedFields.splice(newIndex, 0, movedItem);
-
-        // Update the field array values using replace function
-        // This is more efficient than using setValue for field arrays
-        const newValues = updatedFields.map((field, index) => ({
-          ...field,
-          displayOrder: index + 1, // Update display order based on new position
-        }));
-
-        replace(newValues);
-      }
-    }
-  }
 }

@@ -11,6 +11,7 @@ import Loading from '@/app/loading';
 import { GeneralCategoryModel } from '@/app/lib/definitions';
 import CategoryProductList from '../../_components/CategoryProductList';
 import { clientSideFetch } from '@/app/lib/api/apiClient';
+import { useRouter } from 'next/router';
 
 export default function AdminCollectionDetail({
   params,
@@ -18,6 +19,7 @@ export default function AdminCollectionDetail({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const router = useRouter();
   const { data: category, isLoading } = useSWR(
     ADMIN_API_PATHS.COLLECTION.replace(':id', id),
     async (url) => {
@@ -40,6 +42,7 @@ export default function AdminCollectionDetail({
     );
     if (response.data) {
       toast('Category updated', { type: 'success' });
+      router.replace(`/admin/collections/${id}`);
     } else if (response.error) {
       toast('Failed to update category', { type: 'error' });
     }
@@ -63,7 +66,7 @@ export default function AdminCollectionDetail({
         handleSave={handleSave}
         title='Collection Detail'
       />
-      <CategoryProductList />
+      <CategoryProductList products={[]} />
     </div>
   );
 }

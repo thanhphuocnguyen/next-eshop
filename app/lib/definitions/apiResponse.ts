@@ -11,7 +11,7 @@ export type GenericResponse<T = any> = {
 export type ErrorResponse = {
   code: string;
   details: string;
-  stack: string;
+  stack: object;
 };
 
 export type Meta = {

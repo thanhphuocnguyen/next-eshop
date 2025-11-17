@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import { Button } from '@headlessui/react';
 import { PUBLIC_API_PATHS } from '@/app/lib/constants/api';
 import { CheckoutDataResponse } from '@/app/(user)/(personal)/checkout/_lib/definitions';
+import Cookies from 'js-cookie';
 
 interface PaymentSetupModalProps {
   orderId: string;
@@ -57,7 +58,7 @@ const PaymentSetupModal: React.FC<PaymentSetupModalProps> = ({
 
       if (selectedMethod === 'stripe') {
         // Redirect to stripe payment page or handle stripe checkout
-        localStorage.setItem(
+        Cookies.set(
           'checkoutData',
           JSON.stringify({
             orderId: orderId,

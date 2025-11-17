@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useCallback, useState } from 'react';
 import { CartModel, GenericResponse } from '../definitions';
 import { clientSideFetch } from '../api/apiClient';

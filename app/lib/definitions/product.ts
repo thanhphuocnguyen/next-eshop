@@ -47,36 +47,24 @@ export interface ProductCreateBody {
   }[];
 }
 
-export const BaseAttributeValueFormSchema = z.object({
-  name: z.string().optional(),
-  code: z.string().optional(),
-  displayOrder: z.number().optional(),
-  isActive: z.boolean().optional(),
-});
-
 export const BaseAttributeFormSchema = z.object({
   name: z.string().optional(),
 });
 
 export const AttributeFormSchema = BaseAttributeFormSchema.extend({
-  values: BaseAttributeValueFormSchema.extend({
-    id: z.string().optional(),
-  })
-    .array()
-    .min(1, {
-      message: 'At least one value is required',
-    }),
+  values: z
+    .object({
+      id: z.number().optional(),
+      value: z.string().min(1, 'At least 1 character is required'),
+    })
+    .array(),
 });
 
 export const ProductVariantAttributeFormSchema = BaseAttributeFormSchema.extend(
   {
-    valueObject: BaseAttributeValueFormSchema.extend({
-      id: z
-        .string()
-        .uuid({
-          message: 'Value is required',
-        })
-        .optional(),
+    valueObject: z.object({
+      id: z.number().optional(),
+      name: z.string().optional(),
     }),
   }
 );
@@ -132,32 +120,22 @@ export type ProductVariantAttributeFormModel = z.infer<
   typeof ProductVariantAttributeFormSchema
 >;
 
-export type AttributeValueFormModel = z.infer<
-  typeof BaseAttributeValueFormSchema
->;
-
-export type AttributeValueDetailModel = {
-  id: string;
-  name: string;
-  code: string;
-  displayOrder: number;
-  createdAt: Date;
-  isActive: boolean;
-  outOfStock?: boolean;
+export type AttributeValueModel = {
+  id: number;
+  value: string;
 };
 
 export type AttributeDetailModel = {
-  id: string;
+  id: number;
   name: string;
-  values: AttributeValueDetailModel[];
-  createdAt: Date;
+  values: AttributeValueModel[];
 };
 
 export type ProductVariantAttributeModel = Omit<
   AttributeDetailModel,
   'values'
 > & {
-  valueObject: AttributeValueDetailModel;
+  valueObject: AttributeValueModel;
 };
 
 export type VariantDetailModel = {

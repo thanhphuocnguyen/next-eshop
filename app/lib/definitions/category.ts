@@ -5,7 +5,6 @@ export type GeneralCategoryModel = {
   slug: string;
   imageUrl: string;
   published: boolean;
-  remarkable: boolean;
   createdAt: Date;
   updatedAt: Date;
 };

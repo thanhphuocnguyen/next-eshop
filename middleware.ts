@@ -13,6 +13,11 @@ export type JwtModel = {
 } & JwtPayload;
 
 const AdminPath = '/admin';
+const clearCookies = (response: NextResponse) => {
+  response.cookies.delete('accessToken');
+  response.cookies.delete('refreshToken');
+  response.cookies.delete('sessionId');
+}
 export async function middleware(request: NextRequest) {
   const privatePaths = ['/profile', '/checkout', '/cart', '/orders'];
   const path = request.nextUrl.pathname;
@@ -34,18 +39,14 @@ export async function middleware(request: NextRequest) {
       const response = NextResponse.redirect(
         new URL('/login', request.nextUrl)
       );
-      response.cookies.delete('accessToken');
-      response.cookies.delete('refreshToken');
-      response.cookies.delete('sessionId');
+      clearCookies(response);
       return response;
     }
 
     const { data, error }: GenericResponse<RefreshTokenResponse> =
       await refreshResult.json();
     if (error) {
-      request.cookies.delete('accessToken');
-      request.cookies.delete('refreshToken');
-      request.cookies.delete('sessionId');
+      clearCookies(response);
       return NextResponse.redirect(new URL('/login', request.nextUrl));
     }
 

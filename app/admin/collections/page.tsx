@@ -11,6 +11,7 @@ import { GeneralCategoryModel } from '@/app/lib/definitions';
 import { useState } from 'react';
 import { ConfirmDialog } from '@/app/components/Common/Dialogs/ConfirmDialog';
 import { clientSideFetch } from '@/app/lib/api/apiClient';
+import Cookies from 'js-cookie';
 
 export default function Page() {
   const [selectedCollection, setSelectedCollection] =
@@ -40,7 +41,7 @@ export default function Page() {
         {
           method: 'DELETE',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+            Authorization: `Bearer ${Cookies.get('accessToken')}`,
           },
         }
       );
@@ -131,19 +132,14 @@ export default function Page() {
                 <td className='px-6 py-4'>
                   <div className='flex flex-col gap-1'>
                     {collection.published !== undefined && (
-                      <span 
+                      <span
                         className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          collection.published 
-                            ? 'bg-green-100 text-green-800' 
+                          collection.published
+                            ? 'bg-green-100 text-green-800'
                             : 'bg-gray-100 text-gray-800'
                         }`}
                       >
                         {collection.published ? 'Published' : 'Draft'}
-                      </span>
-                    )}
-                    {collection.remarkable !== undefined && collection.remarkable && (
-                      <span className='px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full'>
-                        Featured
                       </span>
                     )}
                   </div>

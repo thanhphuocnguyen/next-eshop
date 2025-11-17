@@ -1,7 +1,7 @@
-import { GenericResponse } from '../lib/definitions';
+import { ErrorResponse } from '../lib/definitions';
 
 // Helper function to serialize query parameters
-export function serializeQueryParams(params: Record<string, any>): string {
+export function serializeQueryParams(params: Record<string, unknown>): string {
   if (!params || Object.keys(params).length === 0) return '';
 
   const searchParams = new URLSearchParams();
@@ -29,12 +29,8 @@ export async function badRequestHandler(response: Response) {
   if (response.status > 299) {
     let errorMessage = 'An error occurred';
     try {
-      const errorData = (await response.json()) as GenericResponse<unknown>;
-      errorMessage =
-        errorData.error?.details ||
-        errorData.error?.stack ||
-        errorData.error?.code ||
-        'Unknown error';
+      const errorData = (await response.json()) as ErrorResponse;
+      errorMessage = errorData.details || errorData.code || 'Unknown error';
     } catch (e) {
       const errorText = await response.text();
       errorMessage = errorText;

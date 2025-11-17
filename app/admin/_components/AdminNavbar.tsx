@@ -12,15 +12,16 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import { logoutAction } from '@/app/actions/auth';
 import { useUser } from '@/app/hooks';
+import Cookies from 'js-cookie';
 
 export default function AdminNavbar() {
   const { user, mutateUser } = useUser();
   const router = useRouter();
   const logout = async () => {
     await logoutAction();
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('sessionId');
+    Cookies.remove('accessToken');
+    Cookies.remove('refreshToken');
+    Cookies.remove('sessionId');
     mutateUser(undefined, { revalidate: false });
     router.refresh();
     redirect('/login');

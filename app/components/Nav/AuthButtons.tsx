@@ -9,6 +9,7 @@ import { redirect, useRouter } from 'next/navigation';
 import React from 'react';
 import { logoutAction } from '@/app/actions/auth';
 import { useUser } from '@/app/hooks';
+import Cookies from 'js-cookie';
 
 const AuthButtons: React.FC = ({}) => {
   const { user, isLoading, mutateUser } = useUser();
@@ -16,9 +17,9 @@ const AuthButtons: React.FC = ({}) => {
 
   const logout = async () => {
     await logoutAction();
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('sessionId');
+    Cookies.remove('accessToken');
+    Cookies.remove('refreshToken');
+    Cookies.remove('sessionId');
     mutateUser(undefined, { revalidate: false });
     router.refresh();
     redirect('/login');

@@ -8,17 +8,17 @@ import { badRequestHandler, serializeQueryParams } from '@/app/utils';
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-  body?: Record<string, any> | FormData;
+  body?: Record<string, unknown> | FormData;
   headers?: Record<string, string>;
   authToken?: string;
   nextOptions?: RequestInit;
   retryOnUnauthorized?: boolean;
   req?: Request; // For SSR cookie access
   res?: Response;
-  queryParams?: Record<string, any>; // Added queryParams option
+  queryParams?: Record<string, unknown>; // Added queryParams option
 };
 
-export async function serverSideFetch<T = any>(
+export async function serverSideFetch<T = unknown>(
   endpoint: string,
   {
     method = 'GET',
@@ -60,25 +60,31 @@ export async function serverSideFetch<T = any>(
   const cookieStore = await cookies();
   const refreshToken = cookieStore.get('refreshToken')?.value;
 
-  if (
-    response.status === 401 &&
-    retryOnUnauthorized &&
-    !token &&
-    refreshToken
-  ) {
-    const newToken = await refreshTokenAction();
-    if (newToken) {
-      return serverSideFetch<T>(endpoint, {
-        method,
-        body,
-        headers,
-        nextOptions,
-        retryOnUnauthorized: false,
-        req,
-        res,
-      });
+  if (response.status === 401) {
+    if (retryOnUnauthorized && !token && refreshToken) {
+      const newToken = await refreshTokenAction();
+      if (newToken) {
+        return serverSideFetch<T>(endpoint, {
+          method,
+          body,
+          headers,
+          nextOptions,
+          retryOnUnauthorized: false,
+          req,
+          res,
+        });
+      } else {
+        console.error('Token refresh failed, redirecting to login');
+        cookiesStore.delete('accessToken');
+        cookiesStore.delete('refreshToken');
+        cookiesStore.delete('sessionId');
+        redirect('/login');
+      }
     } else {
-      console.error('Token refresh failed, redirecting to login');
+      console.error('Unauthorized request, redirecting to login');
+      cookiesStore.delete('accessToken');
+      cookiesStore.delete('refreshToken');
+      cookiesStore.delete('sessionId');
       redirect('/login');
     }
   }

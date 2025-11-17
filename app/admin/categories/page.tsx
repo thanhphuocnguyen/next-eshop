@@ -142,11 +142,6 @@ export default function Page() {
                   >
                     {category.published ? 'Published' : 'Draft'}
                   </span>
-                  {category.remarkable && (
-                    <span className='ml-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full'>
-                      Featured
-                    </span>
-                  )}
                 </td>
                 <td className='px-6 py-4'>
                   <div className='flex space-x-2'>

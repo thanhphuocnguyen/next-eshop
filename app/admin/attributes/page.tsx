@@ -7,13 +7,13 @@ import { AttributeDetailModel } from '@/app/lib/definitions';
 import { AddNewDialog } from './_components/AttribueFormDialog';
 import { ConfirmDialog } from '@/app/components/Common/Dialogs/ConfirmDialog';
 import { toast } from 'react-toastify';
-import dayjs from 'dayjs';
 import Link from 'next/link';
 import { clientSideFetch } from '@/app/lib/api/apiClient';
 
 export default function Page() {
   const [attributes, setAttributes] = useState<AttributeDetailModel[]>([]);
-  const [modalMode, setModalMode] = useState<'add' | 'edit' | 'delete'>();
+  const [open, setOpen] = useState<boolean>(false);
+  const [removeOpen, setRemoveOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [selectedAttribute, setSelectedAttribute] =
     useState<AttributeDetailModel | null>(null);
@@ -55,7 +55,7 @@ export default function Page() {
       if (response.data) {
         setAttributes(attributes.filter((e) => e.id !== selectedAttribute?.id));
         setSelectedAttribute(null);
-        setModalMode(undefined);
+        setOpen(false);
         toast('Remove attribute successfully', { type: 'success' });
       } else {
         toast('Failed to delete attribute', { type: 'error' });
@@ -77,7 +77,7 @@ export default function Page() {
         <h2 className='text-2xl font-semibold text-primary'>Attributes List</h2>
         <button
           onClick={() => {
-            setModalMode('add');
+            setOpen(true);
           }}
           className='btn btn-lg btn-primary'
         >
@@ -85,14 +85,14 @@ export default function Page() {
         </button>
       </div>
       <AddNewDialog
-        open={modalMode === 'add'}
+        open={open}
         handleSubmitted={(newAttr) => {
           setAttributes((prev) => [...prev, newAttr]);
           setSelectedAttribute(null);
         }}
         onClose={() => {
           setSelectedAttribute(null);
-          setModalMode(undefined);
+          setOpen(false);
         }}
       />
       <div className='relative overflow-x-auto shadow-md sm:rounded-lg'>
@@ -135,11 +135,9 @@ export default function Page() {
                   </Link>
                 </th>
                 <td className='px-6 py-4'>
-                  {e.values?.map((e) => e.name || e.code)?.join(', ')}
+                  {e.values?.map((e) => e.value)?.join(', ')}
                 </td>
-                <td className='px-6 py-4'>
-                  {dayjs(e.createdAt).format('YYYY/MM/DD')}
-                </td>
+
                 <td className='px-6 py-4'>
                   <div className='flex space-x-2'>
                     <Link
@@ -150,7 +148,7 @@ export default function Page() {
                     </Link>
                     <button
                       onClick={() => {
-                        setModalMode('delete');
+                        setRemoveOpen(true);
                         setSelectedAttribute(e);
                       }}
                       className='font-medium text-red-600 dark:text-red-500 hover:underline'
@@ -172,11 +170,11 @@ export default function Page() {
         </table>
       </div>
       <ConfirmDialog
-        open={modalMode === 'delete'}
+        open={removeOpen}
         title='Delete Attribute'
         message='Are you sure you want to delete this attribute?'
         onClose={() => {
-          setModalMode(undefined);
+          setRemoveOpen(false);
           setSelectedAttribute(null);
         }}
         onConfirm={handleDelete}

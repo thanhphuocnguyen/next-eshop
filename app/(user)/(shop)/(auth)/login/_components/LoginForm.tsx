@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { useState } from 'react';
 import { loginAction } from '@/app/actions/auth';
+import Cookies from 'js-cookie';
 
 // Login form schema
 const loginSchema = z
@@ -99,8 +100,8 @@ export default function LoginFormComponent() {
     }
 
     if (rs.accessToken) {
-      localStorage.setItem('accessToken', rs.accessToken);
-      localStorage.setItem('refreshToken', rs.refreshToken);
+      Cookies.set('accessToken', rs.accessToken);
+      Cookies.set('refreshToken', rs.refreshToken);
       toast.success('Login successful!');
       router.refresh();
       router.push('/');

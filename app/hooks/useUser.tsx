@@ -2,10 +2,11 @@ import useSWR from 'swr';
 import { PUBLIC_API_PATHS } from '../lib/constants/api';
 import { clientSideFetch } from '../lib/api/apiClient';
 import { UserModel } from '../lib/definitions';
+import Cookies from 'js-cookie';
 
 export const useUser = () => {
   const { data, isLoading, mutate } = useSWR(
-    PUBLIC_API_PATHS.GET_ME,
+    Cookies.get('accessToken') ? PUBLIC_API_PATHS.GET_ME : null,
     (url) =>
       clientSideFetch<UserModel>(url, {
         method: 'GET',
