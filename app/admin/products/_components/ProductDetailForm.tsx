@@ -206,7 +206,7 @@ export const ProductDetailForm: React.FC<ProductEditFormProps> = ({
   }, [productDetail, reset]);
 
   return (
-    <div className='h-full px-6 py-3 overflow-auto'>
+    <div className='px-6 py-3 overflow-auto'>
       <FormProvider {...productForm}>
         <Fieldset
           onSubmit={productForm.handleSubmit(submitHandler, console.error)}

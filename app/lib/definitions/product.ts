@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { number, z } from 'zod';
 import { StrIdOptionSchema } from './common';
 import { GeneralCategoryModel } from './category';
 
@@ -46,6 +46,7 @@ export interface ProductCreateBody {
 }
 
 export const BaseAttributeFormSchema = z.object({
+  id: z.number().optional(),
   name: z.string().optional(),
 });
 
@@ -62,7 +63,7 @@ export const ProductVariantAttributeFormSchema = BaseAttributeFormSchema.extend(
   {
     valueObject: z.object({
       id: z.number().optional(),
-      name: z.string().optional(),
+      value: z.string().optional(),
     }),
   }
 );
@@ -80,9 +81,14 @@ export const VariantFormSchema = z.object({
     })
     .nullish(),
   isActive: z.boolean(),
-  attributes: ProductVariantAttributeFormSchema.extend({
-    id: z.string().uuid().optional(),
-  }).array(),
+  attributeValues: z
+    .array(
+      z.object({
+        id: number(),
+        value: z.string(),
+      })
+    )
+    .transform((v) => v.map((e) => e.id)),
 });
 
 export const ProductFormSchema = z
@@ -112,8 +118,10 @@ export const ProductFormSchema = z
 
 export type ProductModelForm = z.input<typeof ProductFormSchema>;
 export type ProductModelFormOut = z.output<typeof ProductFormSchema>;
+
 export type VariantModelForm = z.input<typeof VariantFormSchema>;
 export type VariantModelFormOut = z.output<typeof VariantFormSchema>;
+
 export type AttributeFormModel = z.infer<typeof AttributeFormSchema>;
 export type ProductVariantAttributeFormModel = z.infer<
   typeof ProductVariantAttributeFormSchema
@@ -130,18 +138,15 @@ export type AttributeDetailModel = {
   values: AttributeValueModel[];
 };
 
-export type ProductVariantAttributeModel = Omit<
-  AttributeDetailModel,
-  'values'
-> & {
-  valueObject: AttributeValueModel;
-};
-
 export type VariantDetailModel = {
-  attributes: ProductVariantAttributeModel[];
+  attributeValues: {
+    id: number;
+    name: string;
+    value: string;
+  }[];
   id: string;
   price: number;
-  stockQty: number;
+  stock: number;
   sku: string;
   weight: number;
   isActive: boolean;

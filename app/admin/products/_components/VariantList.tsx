@@ -1,21 +1,26 @@
 'use client';
-import React from 'react';
-import { ManageProductModel, VariantDetailModel } from '@/app/lib/definitions';
+import React, { useState } from 'react';
+import {
+  AttributeFormModel,
+  ManageProductModel,
+  VariantDetailModel,
+} from '@/app/lib/definitions';
 import { PlusIcon, PencilIcon, EyeIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import useSWR from 'swr';
-import { ADMIN_API_PATHS } from '@/app/lib/constants/api';
-import { clientSideFetch } from '@/app/lib/api/apiClient';
 import LoadingInline from '@/app/components/Common/Loadings/LoadingInline';
+import { VariantFormDialog } from './VariantFormModal';
+import { useVariants } from '../_hooks/useVariatns';
 
 interface VariantListProps {
   productDetail: ManageProductModel;
+  productAttributes: Array<AttributeFormModel>;
 }
 
 const VariantItem: React.FC<{
   variant: VariantDetailModel;
   productId: string;
-}> = ({ variant, productId }) => {
+  onEdit: (variant: VariantDetailModel) => void;
+}> = ({ variant, productId, onEdit }) => {
   return (
     <div className='bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-colors'>
       <div className='flex items-center justify-between'>
@@ -30,7 +35,7 @@ const VariantItem: React.FC<{
                   Price: <span className='font-medium'>${variant.price}</span>
                 </p>
                 <p className='text-sm text-gray-600'>
-                  Stock: <span className='font-medium'>{variant.stockQty}</span>
+                  Stock: <span className='font-medium'>{variant.stock}</span>
                 </p>
                 {variant.weight && (
                   <p className='text-sm text-gray-600'>
@@ -54,15 +59,15 @@ const VariantItem: React.FC<{
           </div>
 
           {/* Variant Attributes */}
-          {variant.attributes && variant.attributes.length > 0 && (
+          {variant.attributeValues && variant.attributeValues.length > 0 && (
             <div className='mt-3'>
               <div className='flex flex-wrap gap-2'>
-                {variant.attributes.map((attr, index) => (
+                {variant.attributeValues.map((attr, index) => (
                   <span
                     key={`${attr.id}-${index}`}
                     className='inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800'
                   >
-                    {attr.name}: {attr.valueObject.value}
+                    {attr.name}: {attr.value}
                   </span>
                 ))}
               </div>
@@ -71,13 +76,13 @@ const VariantItem: React.FC<{
         </div>
 
         <div className='flex items-center space-x-2 ml-4'>
-          <Link
-            href={`/admin/products/${productId}/variants/${variant.id}`}
+          <button
+            onClick={() => onEdit(variant)}
             className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors'
             title='Edit variant'
           >
             <PencilIcon className='w-4 h-4' />
-          </Link>
+          </button>
           <Link
             href={`/admin/products/${productId}/variants/${variant.id}/view`}
             className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors'
@@ -91,18 +96,31 @@ const VariantItem: React.FC<{
   );
 };
 
-export const VariantList: React.FC<VariantListProps> = ({ productDetail }) => {
-  const { data: variants, isLoading } = useSWR<VariantDetailModel[]>(
-    ADMIN_API_PATHS.PRODUCT_VARIANTS.replace(':id', productDetail.id),
-    (url) =>
-      clientSideFetch<VariantDetailModel[]>(url, {
-        method: 'GET',
-        queryParams: { includeInactive: 'true' },
-      }).then((res) => res.data),
-    {
-      fallbackData: [],
-    }
-  );
+export const VariantList: React.FC<VariantListProps> = ({
+  productDetail,
+  productAttributes,
+}) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState<
+    VariantDetailModel | undefined
+  >();
+
+  const { variants, isLoading } = useVariants(productDetail.id);
+
+  const handleCreateVariant = () => {
+    setSelectedVariant(undefined);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditVariant = (variant: VariantDetailModel) => {
+    setSelectedVariant(variant);
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedVariant(undefined);
+  };
 
   if (isLoading) {
     return <LoadingInline />;
@@ -121,13 +139,13 @@ export const VariantList: React.FC<VariantListProps> = ({ productDetail }) => {
                 Manage different variations of this product (size, color, etc.)
               </p>
             </div>
-            <Link
-              href={`/admin/products/${productDetail.id}/variant`}
+            <button
+              onClick={handleCreateVariant}
               className='inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors'
             >
               <PlusIcon className='w-4 h-4 mr-2' />
               Add New Variant
-            </Link>
+            </button>
           </div>
 
           {/* Variants List */}
@@ -138,6 +156,7 @@ export const VariantList: React.FC<VariantListProps> = ({ productDetail }) => {
                   key={variant.id}
                   variant={variant}
                   productId={productDetail.id}
+                  onEdit={handleEditVariant}
                 />
               ))}
             </div>
@@ -153,17 +172,26 @@ export const VariantList: React.FC<VariantListProps> = ({ productDetail }) => {
                 Create different variations of this product to offer more
                 options to your customers.
               </p>
-              <Link
-                href={`/admin/products/${productDetail.id}/variant`}
+              <button
+                onClick={handleCreateVariant}
                 className='inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors'
               >
                 <PlusIcon className='w-4 h-4 mr-2' />
                 Create First Variant
-              </Link>
+              </button>
             </div>
           )}
         </div>
       </div>
+
+      {/* Variant Form Dialog */}
+      <VariantFormDialog
+        open={isDialogOpen}
+        variant={selectedVariant}
+        productAttributes={productAttributes}
+        onClose={handleCloseDialog}
+        productId={productDetail.id}
+      />
     </div>
   );
 };

@@ -52,7 +52,7 @@ export const StyledComboBoxController = <T extends FieldValues>({
   }, [query, options]);
 
   return (
-    <Field className='w-full'>
+    <Field className='relative w-full'>
       <Label className='text-sm/6 text-gray-500 font-semibold'>{label}</Label>
       <Controller
         control={control}
@@ -87,7 +87,7 @@ export const StyledComboBoxController = <T extends FieldValues>({
               transition
               className={clsx(
                 'w-[var(--input-width)] rounded-xl border border-gray-300 bg-white p-1 [--anchor-gap:var(--spacing-1)] empty:invisible',
-                'transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0'
+                'transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0 z-[60]'
               )}
             >
               {nullable && (
