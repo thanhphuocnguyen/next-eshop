@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ProductListModel } from '@/app/lib/definitions';
+import { ManageProductListModel } from '@/app/lib/definitions';
 import { StarIcon } from '@heroicons/react/24/solid';
 import { formatCurrency } from '@/app/utils';
 
@@ -11,7 +11,7 @@ export default function CategoryProducts({
   maxPrice,
   selectedRating,
 }: {
-  products: ProductListModel[];
+  products: ManageProductListModel[];
   loadingProducts: boolean;
   minPrice?: number;
   maxPrice?: number;
@@ -78,7 +78,7 @@ export default function CategoryProducts({
   );
 }
 
-export function ProductCard({ product }: { product: ProductListModel }) {
+export function ProductCard({ product }: { product: ManageProductListModel }) {
   return (
     <Link
       href={`/products/${product.slug}`}

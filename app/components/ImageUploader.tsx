@@ -24,10 +24,10 @@ export default function ImageUploader({
   label = 'Upload image',
   onChange,
   className = '',
-  width = 150,
-  height = 150,
+  width,
+  height,
+  aspectRatio,
   maxFileSizeMB = 5,
-  aspectRatio = 1,
 }: ImageUploaderProps) {
   const [image, setImage] = useState<string | null>(defaultImage || null);
   const [file, setFile] = useState<File | null>(null);
@@ -75,7 +75,12 @@ export default function ImageUploader({
     reader.onload = () => {
       const result = reader.result as string;
       setTempImage(result);
-      setIsEditorOpen(true);
+      if (aspectRatio) {
+        setIsEditorOpen(true);
+      } else {
+        setImage(result);
+        onChange?.(selectedFile);
+      }
     };
     reader.readAsDataURL(selectedFile);
   };
@@ -86,12 +91,12 @@ export default function ImageUploader({
       // Convert base64 back to file for form submission
       const filename = file?.name || `cropped-image-${Date.now()}.jpg`;
       const croppedFile = base64ToFile(croppedImageData, filename);
-      
+
       setFile(croppedFile);
       setImage(croppedImageData);
       setIsEditorOpen(false);
       setTempImage(null);
-      
+
       if (onChange) {
         onChange(croppedFile);
       }
@@ -113,9 +118,11 @@ export default function ImageUploader({
     if (file) {
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(file);
-      
+
       // Find the file input element and set its files
-      const fileInput = document.querySelector(`input[name="${name}"]`) as HTMLInputElement;
+      const fileInput = document.querySelector(
+        `input[name="${name}"]`
+      ) as HTMLInputElement;
       if (fileInput) {
         fileInput.files = dataTransfer.files;
       }
@@ -125,49 +132,58 @@ export default function ImageUploader({
   return (
     <div className={className}>
       {isEditorOpen && tempImage ? (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-4 max-w-3xl w-full">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Edit Image</h3>
-            <ImageEditor
-              image={tempImage}
-              onComplete={handleCropComplete}
-              onCancel={handleCancelEdit}
-              aspect={aspectRatio}
-            />
+        <div className='fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-4'>
+          <div className='bg-white rounded-lg p-4 max-w-3xl w-full'>
+            <h3 className='text-lg font-medium text-gray-900 mb-4'>
+              Edit Image
+            </h3>
+            {aspectRatio ? (
+              <ImageEditor
+                image={tempImage}
+                onComplete={handleCropComplete}
+                onCancel={handleCancelEdit}
+                aspect={aspectRatio}
+              />
+            ) : null}
           </div>
         </div>
       ) : (
         <div>
           <div
             className={clsx(
+              'w-full',
               'relative block shadow-md shadow-lime-500 text-sm/6 font-medium text-gray-600',
               'hover:shadow-lime-600 transition-shadow cursor-pointer'
             )}
           >
             <Image
-              className="rounded-sm object-contain"
-              width={width}
-              height={height}
-              alt="Image Upload"
+              className='rounded-sm'
+              width={width ?? 0}
+              height={height ?? 0}
+              // layout={!width && !height ? 'fill' : undefined}
+              alt='Image Upload'
+              sizes={!width && !height ? '100vw' : undefined}
+              style={{ width: '100%', height: 'auto' }}
+              objectFit='cover'
               priority
               src={image || placeholderImage}
             />
             <Input
-              type="file"
-              className="absolute cursor-pointer inset-0 w-full h-full opacity-0 z-10"
+              type='file'
+              className='absolute cursor-pointer inset-0 w-full h-full opacity-0 z-10'
               id={name}
               name={name}
-              accept="image/*"
+              accept='image/*'
               onChange={handleFileChange}
               aria-label={label}
             />
-            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-20 transition-all pointer-events-none">
-              <span className="text-white opacity-0 hover:opacity-100 pointer-events-none">{label}</span>
+            <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-20 transition-all pointer-events-none'>
+              <span className='text-white opacity-0 hover:opacity-100 pointer-events-none'>
+                {label}
+              </span>
             </div>
           </div>
-          {error && (
-            <div className="mt-1 text-xs text-red-500">{error}</div>
-          )}
+          {error && <div className='mt-1 text-xs text-red-500'>{error}</div>}
         </div>
       )}
     </div>

@@ -2,35 +2,46 @@
 import React from 'react';
 import clsx from 'clsx';
 import { Field, Switch } from '@headlessui/react';
-import { useFormContext, useWatch } from 'react-hook-form';
-import { ProductModelForm, VariantModelForm } from '@/app/lib/definitions';
+import { useForm, useWatch } from 'react-hook-form';
+import {
+  VariantFormSchema,
+  VariantModelForm,
+  VariantModelFormOut,
+} from '@/app/lib/definitions';
 import { TextField } from '@/app/components/FormFields';
 import { StyledComboBoxController } from '@/app/components/FormFields/StyledComboBoxController';
 import { useAttributes } from '../../hooks/useAttributes';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 interface AttributeFormProps {
-  index: number;
-  item: VariantModelForm;
-  selectedAttributes: string[];
-  onRemove: (index: number) => void;
+  productAttributes: number[];
 }
 export const VariantForm: React.FC<AttributeFormProps> = ({
-  index,
-  item,
-  selectedAttributes,
-  onRemove,
+  productAttributes,
 }) => {
   const {
     control,
     register,
     setValue,
+    getValues,
     formState: { errors },
-  } = useFormContext<ProductModelForm>();
+  } = useForm<VariantModelForm, unknown, VariantModelFormOut>({
+    resolver: zodResolver(VariantFormSchema),
+    defaultValues: {
+      attributes: [],
+      id: undefined,
+      isActive: true,
+      price: 0,
+      sku: '',
+      stockQty: -1,
+      weight: -1,
+    },
+  });
   const { attributes } = useAttributes();
 
   const isActive = useWatch({
     control,
-    name: `variants.${index}.isActive`,
+    name: `isActive`,
   });
 
   return (
@@ -38,14 +49,12 @@ export const VariantForm: React.FC<AttributeFormProps> = ({
       <div className='flex w-full justify-between px-2 py-1 text-left mb-0'>
         <div className='flex items-center gap-5'>
           <span className='text-lg font-semibold'>
-            {item.sku ?? `Variant ${index + 1}`}
+            {getValues('sku') ?? `New Variant`}
           </span>
           <Field className='flex items-center gap-2'>
             <Switch
               checked={!!isActive}
-              onChange={(checked) =>
-                setValue(`variants.${index}.isActive`, checked)
-              }
+              onChange={(checked) => setValue(`isActive`, checked)}
               className={clsx(
                 'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
                 isActive ? 'bg-primary' : 'bg-gray-200'
@@ -62,7 +71,7 @@ export const VariantForm: React.FC<AttributeFormProps> = ({
             <span
               className='font-semibold cursor-pointer'
               onClick={() => {
-                setValue(`variants.${index}.isActive`, !isActive);
+                setValue(`isActive`, !isActive);
               }}
             >
               Active
@@ -75,7 +84,7 @@ export const VariantForm: React.FC<AttributeFormProps> = ({
             className={clsx(
               'btn btn-danger btn-sm transition-all duration-300 hover:scale-105'
             )}
-            onClick={() => onRemove(index)}
+            onClick={() => {}}
           >
             Remove
           </button>
@@ -84,22 +93,19 @@ export const VariantForm: React.FC<AttributeFormProps> = ({
 
       <div className='px-2 pt-2 pb-0'>
         <div className='grid grid-cols-5 gap-x-3'>
-          {selectedAttributes?.map((attribute, idx) => {
+          {productAttributes?.map((attribute, idx) => {
             const attr = attributes?.find((e) => e.id === attribute);
             return attribute ? (
               <StyledComboBoxController
                 control={control}
                 key={attribute}
-                error={
-                  errors.variants?.[index]?.attributes?.[idx]?.valueObject?.id
-                    ?.message
-                }
+                error={errors.attributes?.[idx]?.valueObject?.id?.message}
                 getDisplayValue={(attrOpt) =>
                   attr && attr.name.toLowerCase().startsWith('color')
                     ? attrOpt?.name
                     : attrOpt.code
                 }
-                name={`variants.${index}.attributes.${idx}.valueObject`}
+                name={`attributes.${idx}.valueObject`}
                 label={attr?.name ?? ''}
                 options={
                   attributes?.find((e) => e.id === attr?.id)?.values ?? []
@@ -108,23 +114,23 @@ export const VariantForm: React.FC<AttributeFormProps> = ({
             ) : null;
           })}
           <TextField
-            {...register(`variants.${index}.price`)}
+            {...register(`price`)}
             label='Price'
             placeholder='Enter Price'
-            error={errors.variants?.[index]?.price?.message}
+            error={errors.price?.message}
             type='number'
             disabled={false}
           />
           <TextField
-            {...register(`variants.${index}.stockQty`)}
+            {...register(`stockQty`)}
             label='Stock'
             placeholder='Enter Stock'
-            error={errors.variants?.[index]?.stockQty?.message}
+            error={errors.stockQty?.message}
             type='number'
             disabled={false}
           />
           <TextField
-            {...register(`variants.${index}.weight`)}
+            {...register(`weight`)}
             label='Weight'
             placeholder='Enter Weight'
             type='number'

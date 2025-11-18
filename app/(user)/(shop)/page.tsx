@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import CategoriesSection from './components/CategoriesSection';
-import CollectionsSection from './components/CollectionsSection';
+import CategoriesSection from './_components/CategoriesSection';
+import CollectionsSection from './_components/CollectionsSection';
 import { Metadata } from 'next';
 import { PUBLIC_API_PATHS } from '@/app/lib/constants/api';
 import { GeneralCategoryModel } from '@/app/lib/definitions';

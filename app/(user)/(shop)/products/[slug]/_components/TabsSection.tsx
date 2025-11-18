@@ -1,9 +1,9 @@
 'use client';
-import { ProductDetailModel } from '@/app/lib/definitions';
+import { ManageProductModel } from '@/app/lib/definitions';
 import React, { useState } from 'react';
 
 interface TabsSectionProps {
-  productDetail: ProductDetailModel;
+  productDetail: ManageProductModel;
   details: string[];
 }
 

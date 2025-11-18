@@ -1,16 +1,14 @@
 import { z } from 'zod';
-import { BaseOptionSchema } from './common';
+import { StrIdOptionSchema } from './common';
 import { GeneralCategoryModel } from './category';
 
-export type ProductListModel = {
+export type ManageProductListModel = {
   id: string;
   name: string;
   description: string;
-  variantCount: number;
   slug: string;
   imageUrl?: string;
-  minPrice: number;
-  maxPrice: number;
+  basePrice: number;
   avgRating: number;
   reviewCount: number;
   sku: string;
@@ -87,34 +85,35 @@ export const VariantFormSchema = z.object({
   }).array(),
 });
 
-export const ProductFormSchema = z.object({
-  productInfo: z.object({
+export const ProductFormSchema = z
+  .object({
     name: z.string().min(3).max(100),
     description: z.string().min(10).max(5000),
     shortDescription: z.string().optional(),
-    attributes: z.string().uuid().array(),
+    attributes: z.number().array().min(1, 'Select at least one attribute'),
     price: z.coerce.number().gt(0),
     sku: z.string().nonempty(),
     slug: z.string().nonempty(),
     isActive: z.boolean(),
-    category: BaseOptionSchema,
-    brand: BaseOptionSchema,
-    collection: BaseOptionSchema.nullish(),
-    images: z
-      .object({
-        id: z.string().uuid().optional(),
-        url: z.string(),
-        role: z.string().nullish(),
-        assignments: z.string().array(),
-        isRemoved: z.boolean().optional(),
-      })
-      .array(),
-  }),
-  variants: z.array(VariantFormSchema),
-});
+    category: StrIdOptionSchema,
+    brand: StrIdOptionSchema,
+    collection: StrIdOptionSchema.extend({
+      id: z.string().nullish(),
+    }).nullish(),
+    imageUrl: z.string().url().optional(),
+    imageId: z.string().optional(),
+  })
+  .transform((data) => ({
+    ...data,
+    brandId: data.brand.id,
+    categoryId: data.category.id,
+    collectionId: data.collection?.id || null,
+  }));
 
-export type ProductModelForm = z.infer<typeof ProductFormSchema>;
-export type VariantModelForm = z.infer<typeof VariantFormSchema>;
+export type ProductModelForm = z.input<typeof ProductFormSchema>;
+export type ProductModelFormOut = z.output<typeof ProductFormSchema>;
+export type VariantModelForm = z.input<typeof VariantFormSchema>;
+export type VariantModelFormOut = z.output<typeof VariantFormSchema>;
 export type AttributeFormModel = z.infer<typeof AttributeFormSchema>;
 export type ProductVariantAttributeFormModel = z.infer<
   typeof ProductVariantAttributeFormSchema
@@ -166,12 +165,12 @@ export type ProductImageModel = {
   assignments: AssignmentImageModel[];
 };
 
-export type ProductDetailModel = {
+export type ManageProductModel = {
   id: string;
   name: string;
   description: string;
   shortDescription: string;
-  attributes: string[];
+  attributes: number[];
   slug: string;
   isActive: boolean;
   price: number;
@@ -180,10 +179,6 @@ export type ProductDetailModel = {
   collection: GeneralCategoryModel;
   brand: GeneralCategoryModel;
   published: boolean;
-  variants: VariantDetailModel[];
-  maxDiscountValue?: number; // max discount value
-  discountType?: string; // 'percentage' | 'fixed'
-  productImages: ProductImageModel[];
   createdAt: string; // date
   updatedAt: string; // date
   ratingCount: number;
@@ -192,4 +187,6 @@ export type ProductDetailModel = {
   threeStarCount: number;
   fourStarCount: number;
   fiveStarCount: number;
+  imageUrl: string;
+  imageId: string;
 };

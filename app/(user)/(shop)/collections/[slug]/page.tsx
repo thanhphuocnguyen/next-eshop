@@ -1,6 +1,6 @@
 import { PUBLIC_API_PATHS } from '@/app/lib/constants/api';
 import { serverSideFetch } from '@/app/lib/api/apiServer';
-import { Pagination, ProductDetailModel } from '@/app/lib/definitions';
+import { Pagination, ManageProductModel } from '@/app/lib/definitions';
 import ProductGrid from '@/app/components/Product/ProductGrid';
 // Import the CategoryFilter component
 import { CheckboxGroup } from './components/CategoryFilter';
@@ -27,7 +27,7 @@ async function getCollectionProducts(
   brandSlug?: string,
   attributeSlug?: string
 ): Promise<{
-  data: ProductDetailModel[];
+  data: ManageProductModel[];
   pagination: Pagination;
 }> {
   const queryParams: Record<string, string> = {
@@ -49,7 +49,7 @@ async function getCollectionProducts(
     queryParams.attribute = attributeSlug;
   }
 
-  const result = await serverSideFetch<ProductDetailModel[]>(
+  const result = await serverSideFetch<ManageProductModel[]>(
     `${PUBLIC_API_PATHS.PRODUCTS}?page=${page}&pageSize=${pageSize}`,
     {
       queryParams,

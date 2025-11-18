@@ -2,10 +2,10 @@ import React from 'react';
 import Link from 'next/link';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import ProductCard from './ProductCard';
-import { Pagination, ProductDetailModel } from '@/app/lib/definitions';
+import { Pagination, ManageProductModel } from '@/app/lib/definitions';
 
 interface ProductGridProps {
-  products: ProductDetailModel[];
+  products: ManageProductModel[];
   pagination: Pagination;
   basePath: string;
 }
@@ -20,7 +20,7 @@ export default function ProductGrid({
   const currentPage = pagination.page;
 
   // Function to calculate min and max prices from variants
-  const getMinMaxPrice = (product: ProductDetailModel) => {
+  const getMinMaxPrice = (product: ManageProductModel) => {
     if (!product.variants || product.variants.length === 0) {
       return { min: product.price, max: product.price };
     }
@@ -33,7 +33,7 @@ export default function ProductGrid({
   };
 
   // Function to get the primary image URL
-  const getImageUrl = (product: ProductDetailModel) => {
+  const getImageUrl = (product: ManageProductModel) => {
     if (product.product_images && product.product_images.length > 0) {
       // Try to find a thumbnail image first
       const thumbnail = product.product_images.find(
@@ -48,7 +48,7 @@ export default function ProductGrid({
   };
 
   // Calculate average rating
-  const calculateRating = (product: ProductDetailModel) => {
+  const calculateRating = (product: ManageProductModel) => {
     const {
       one_star_count,
       two_star_count,

@@ -1,8 +1,15 @@
 import { z } from 'zod';
 
 export const BaseOptionSchema = z.object({
-  id: z.string(),
   name: z.string(),
+});
+
+export const NumIdOptionSchema = BaseOptionSchema.extend({
+  id: z.number(),
+});
+
+export const StrIdOptionSchema = BaseOptionSchema.extend({
+  id: z.string(),
 });
 
 export enum OrderStatus {

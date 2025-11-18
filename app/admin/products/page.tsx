@@ -137,10 +137,8 @@ export default function Page() {
                 >
                   {product.name}
                 </th>
-                <td className='px-6 py-4'>
-                  ${product.minPrice.toFixed(2)} - $
-                  {product.maxPrice.toFixed(2)}
-                </td>
+                <td className='px-6 py-4'>{product.basePrice}</td>
+
                 <td className='px-6 py-4'>{product.sku}</td>
                 <td className='px-6 py-4'>
                   {product.createdAt &&

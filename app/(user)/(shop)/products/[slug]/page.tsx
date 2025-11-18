@@ -1,5 +1,5 @@
 import { PUBLIC_API_PATHS } from '@/app/lib/constants/api';
-import { ProductDetailModel } from '@/app/lib/definitions';
+import { ManageProductModel } from '@/app/lib/definitions';
 import {
   CurrencyDollarIcon,
   GlobeAsiaAustraliaIcon,
@@ -16,13 +16,14 @@ import {
 } from './_components';
 import { Metadata } from 'next';
 import { serverSideFetch } from '@/app/lib/api/apiServer';
+import Link from 'next/link';
 
 type Props = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 export const getCacheProduct = cache(async (slug: string) => {
-  const { data, error } = await serverSideFetch<ProductDetailModel>(
+  const { data, error } = await serverSideFetch<ManageProductModel>(
     PUBLIC_API_PATHS.PRODUCT_DETAIL.replace(':id', slug),
     {
       nextOptions: {
@@ -91,15 +92,15 @@ async function ProductDetailPage({ params }: Props) {
       <nav className='flex text-sm text-gray-500 my-8' aria-label='Breadcrumb'>
         <ol className='flex items-center space-x-2'>
           <li>
-            <a href='/' className='hover:text-gray-700'>
+            <Link href='/' className='hover:text-gray-700'>
               Home
-            </a>
+            </Link>
           </li>
           <li>
             <span className='mx-2'>/</span>
-            <a href='/products' className='hover:text-gray-700'>
+            <Link href='/products' className='hover:text-gray-700'>
               Products
-            </a>
+            </Link>
           </li>
           <li>
             <span className='mx-2'>/</span>
@@ -142,7 +143,8 @@ async function ProductDetailPage({ params }: Props) {
             <div className='flex items-center justify-between'>
               <div>
                 <h2 className='sr-only'>Product price</h2>
-                {productDetail.maxDiscountValue && productDetail.maxDiscountValue > 0 ? (
+                {productDetail.maxDiscountValue &&
+                productDetail.maxDiscountValue > 0 ? (
                   <>
                     {minPrice !== maxPrice ? (
                       <div>
@@ -151,13 +153,14 @@ async function ProductDetailPage({ params }: Props) {
                         </p>
                         <div className='flex flex-col'>
                           <p className='text-2xl font-bold text-emerald-700'>
-                            {productDetail.discountType === 'percentage' 
-                              ? `$${(minPrice - (minPrice * productDetail.maxDiscountValue / 100)).toFixed(2)} - $${(maxPrice - (maxPrice * productDetail.maxDiscountValue / 100)).toFixed(2)}`
+                            {productDetail.discountType === 'percentage'
+                              ? `$${(minPrice - (minPrice * productDetail.maxDiscountValue) / 100).toFixed(2)} - $${(maxPrice - (maxPrice * productDetail.maxDiscountValue) / 100).toFixed(2)}`
                               : `$${(minPrice - productDetail.maxDiscountValue).toFixed(2)} - $${(maxPrice - productDetail.maxDiscountValue).toFixed(2)}`}
                           </p>
                           <p className='text-sm font-medium text-emerald-600 mt-1'>
-                            Save {productDetail.discountType === 'percentage' 
-                              ? `$${((minPrice * productDetail.maxDiscountValue / 100)).toFixed(2)} - $${((maxPrice * productDetail.maxDiscountValue / 100)).toFixed(2)}`
+                            Save{' '}
+                            {productDetail.discountType === 'percentage'
+                              ? `$${((minPrice * productDetail.maxDiscountValue) / 100).toFixed(2)} - $${((maxPrice * productDetail.maxDiscountValue) / 100).toFixed(2)}`
                               : `$${productDetail.maxDiscountValue.toFixed(2)}`}
                           </p>
                         </div>
@@ -170,12 +173,13 @@ async function ProductDetailPage({ params }: Props) {
                         <div className='flex flex-col'>
                           <p className='text-2xl font-bold text-emerald-700'>
                             {productDetail.discountType === 'percentage'
-                              ? `$${(minPrice - (minPrice * productDetail.maxDiscountValue / 100)).toFixed(2)}`
+                              ? `$${(minPrice - (minPrice * productDetail.maxDiscountValue) / 100).toFixed(2)}`
                               : `$${(minPrice - productDetail.maxDiscountValue).toFixed(2)}`}
                           </p>
                           <p className='text-sm font-medium text-emerald-600 mt-1'>
-                            Save {productDetail.discountType === 'percentage'
-                              ? `$${(minPrice * productDetail.maxDiscountValue / 100).toFixed(2)}`
+                            Save{' '}
+                            {productDetail.discountType === 'percentage'
+                              ? `$${((minPrice * productDetail.maxDiscountValue) / 100).toFixed(2)}`
                               : `$${productDetail.maxDiscountValue.toFixed(2)}`}
                           </p>
                         </div>
@@ -289,23 +293,24 @@ async function ProductDetailPage({ params }: Props) {
           </div>
 
           {/* Discount information */}
-          {productDetail.maxDiscountValue && productDetail.maxDiscountValue > 0 && (
-            <div className='mt-6 px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 flex items-center shadow-sm'>
-              <div className='bg-gradient-to-r from-emerald-100 to-teal-100 rounded-full p-3 mr-4 shadow-inner'>
-                <TagIcon className='size-5 text-emerald-700' />
+          {productDetail.maxDiscountValue &&
+            productDetail.maxDiscountValue > 0 && (
+              <div className='mt-6 px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 flex items-center shadow-sm'>
+                <div className='bg-gradient-to-r from-emerald-100 to-teal-100 rounded-full p-3 mr-4 shadow-inner'>
+                  <TagIcon className='size-5 text-emerald-700' />
+                </div>
+                <div className='flex flex-col'>
+                  <p className='font-semibold text-emerald-800 text-lg'>
+                    Limited Time Offer!
+                  </p>
+                  <p className='text-sm font-medium text-emerald-700'>
+                    {productDetail.discountType === 'percentage'
+                      ? `${productDetail.maxDiscountValue}% off (You save $${((minPrice * productDetail.maxDiscountValue) / 100).toFixed(2)})`
+                      : `$${productDetail.maxDiscountValue.toFixed(2)} off your purchase`}
+                  </p>
+                </div>
               </div>
-              <div className='flex flex-col'>
-                <p className='font-semibold text-emerald-800 text-lg'>
-                  Limited Time Offer!
-                </p>
-                <p className='text-sm font-medium text-emerald-700'>
-                  {productDetail.discountType === 'percentage' 
-                    ? `${productDetail.maxDiscountValue}% off (You save $${(minPrice * productDetail.maxDiscountValue / 100).toFixed(2)})` 
-                    : `$${productDetail.maxDiscountValue.toFixed(2)} off your purchase`}
-                </p>
-              </div>
-            </div>
-          )}
+            )}
         </div>
       </div>
 

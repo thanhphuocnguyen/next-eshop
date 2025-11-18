@@ -24,7 +24,7 @@ export default async function Layout({
         <section className='p-4 m-5 border-2 border-gray-200 shadow-sm flex flex-col h-[90%] rounded-md'>
           <SWRConfig
             value={{
-              refreshInterval: 18000,
+              refreshInterval: 300000, // 5 minutes
             }}
           >
             {children}

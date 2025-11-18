@@ -1,6 +1,6 @@
 import { PUBLIC_API_PATHS } from '@/app/lib/constants/api';
 import { serverSideFetch } from '@/app/lib/api/apiServer';
-import { ProductListModel } from '@/app/lib/definitions';
+import { ManageProductListModel } from '@/app/lib/definitions';
 import CategoryProducts from './_components/CategoryProducts';
 import CategoryFilters from './_components/CategoryFilters';
 import { categoryCache } from './layout';
@@ -39,7 +39,7 @@ async function getProducts(
     queryParams.minRating = rating;
   }
 
-  const { data, error } = await serverSideFetch<ProductListModel[]>(
+  const { data, error } = await serverSideFetch<ManageProductListModel[]>(
     PUBLIC_API_PATHS.PRODUCTS,
     { queryParams }
   );

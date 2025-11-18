@@ -13,6 +13,8 @@ import { z } from 'zod';
 import { useState } from 'react';
 import { loginAction } from '@/app/actions/auth';
 import Cookies from 'js-cookie';
+import { useSWRConfig } from 'swr';
+import { PUBLIC_API_PATHS } from '@/app/lib/constants/api';
 
 // Login form schema
 const loginSchema = z
@@ -44,7 +46,7 @@ type LoginMethod = 'email' | 'username';
 export default function LoginFormComponent() {
   const router = useRouter();
   const [loginMethod, setLoginMethod] = useState<LoginMethod>('email');
-
+  const { mutate } = useSWRConfig();
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -104,6 +106,7 @@ export default function LoginFormComponent() {
       Cookies.set('refreshToken', rs.refreshToken);
       toast.success('Login successful!');
       router.refresh();
+      mutate(PUBLIC_API_PATHS.GET_ME);
       router.push('/');
     } else {
       toast.error('Login failed. Please check your credentials.');

@@ -10,25 +10,34 @@ import { useCollections } from '../../hooks/useCollections';
 import { useBrands } from '../../hooks/useBrands';
 import { useAttributes } from '../../hooks/useAttributes';
 import { useCategories } from '../../hooks/useCategories';
-import { ProductDetailModel, ProductModelForm } from '@/app/lib/definitions';
+import {
+  ManageProductModel,
+  ProductModelForm,
+  ProductModelFormOut,
+} from '@/app/lib/definitions';
 import { useFormContext } from 'react-hook-form';
 import clsx from 'clsx';
-import { ProductImagesUploader } from './ProductImagesUploader';
+import ImageUploader from '@/app/components/ImageUploader';
 
 export const ProductInfoForm: React.FC<{
-  productDetail?: ProductDetailModel;
-}> = ({ productDetail }) => {
+  file: File | null;
+  setFile: (file: File | null) => void;
+  productDetail?: ManageProductModel;
+}> = ({ setFile, productDetail }) => {
   const { categories, isLoading: categoriesLoading } = useCategories();
   const { collections, isLoading: collectionLoading } = useCollections();
   const { brands, isLoading: brandsLoading } = useBrands();
   const { attributes, attributesLoading } = useAttributes();
 
-  const { register, control, watch, formState, setValue } =
-    useFormContext<ProductModelForm>();
+  const { register, control, watch, formState, setValue } = useFormContext<
+    ProductModelForm,
+    unknown,
+    ProductModelFormOut
+  >();
 
   useEffect(() => {
     if (!productDetail && categories && categories.length > 0) {
-      setValue('productInfo.category', categories[0], {
+      setValue('category', categories[0], {
         shouldDirty: false,
       });
     }
@@ -37,7 +46,7 @@ export const ProductInfoForm: React.FC<{
 
   useEffect(() => {
     if (!productDetail && collections && collections.length > 0) {
-      setValue('productInfo.collection', collections[0], {
+      setValue('collection', collections[0], {
         shouldDirty: false,
       });
     }
@@ -46,7 +55,7 @@ export const ProductInfoForm: React.FC<{
 
   useEffect(() => {
     if (!productDetail && brands && brands.length > 0) {
-      setValue('productInfo.brand', brands[0], {
+      setValue('brand', brands[0], {
         shouldDirty: false,
       });
     }
@@ -59,8 +68,8 @@ export const ProductInfoForm: React.FC<{
         <h2 className='text-xl font-bold text-primary'>Product Information</h2>
         <Field className='flex items-center gap-2'>
           <Switch
-            checked={watch('productInfo.isActive')}
-            onChange={(value) => setValue('productInfo.isActive', value)}
+            checked={watch('isActive')}
+            onChange={(value) => setValue('isActive', value)}
             className={({ checked }) =>
               clsx(
                 'relative inline-flex h-6 w-11 items-center rounded-full',
@@ -82,138 +91,150 @@ export const ProductInfoForm: React.FC<{
           </Label>
         </Field>
       </div>
-
-      {/* Basic Information */}
-      <div className='grid grid-cols-4 gap-4 mb-6'>
-        <TextField
-          label={'Product name'}
-          {...register('productInfo.name')}
-          error={formState.errors.productInfo?.name?.message}
-          placeholder='Enter product name...'
-          type='text'
-          required
-        />
-        <TextField
-          {...register('productInfo.sku')}
-          label={'Sku'}
-          placeholder='Enter sku...'
-          type='text'
-          error={formState.errors.productInfo?.sku?.message}
-        />
-        <TextField
-          {...register('productInfo.price', {
-            valueAsNumber: true,
-          })}
-          label={'Price'}
-          placeholder='Enter price...'
-          type='number'
-          error={formState.errors.productInfo?.price?.message}
-        />
-        <TextField
-          label={'Slug'}
-          placeholder='Enter slug...'
-          type='text'
-          error={formState.errors.productInfo?.slug?.message}
-          {...register('productInfo.slug')}
-        />
-        {attributesLoading ? (
-          <div className='flex justify-center items-center'>
-            <LoadingSpinner />
-          </div>
-        ) : attributes ? (
-          <StyledMultipleComboBox<{
-            id: string;
-            name: string;
-          }>
-            label='Select an attribute'
-            setSelected={(values) => {
-              setValue(
-                'productInfo.attributes',
-                values.map((e) => e.id),
-                {
-                  shouldDirty: false,
-                }
-              );
-            }}
-            options={attributes}
-            getDisplayValue={(option) => {
-              return option?.name || '';
-            }}
-            selected={watch('productInfo.attributes', []).map((e) => {
-              const attribute = attributes.find((a) => a.id === e)!;
-              return {
-                id: attribute.id,
-                name: attribute.name,
-              };
+      <div className='flex gap-x-4'>
+        {/* Basic Information */}
+        <div className='grid grid-cols-2 gap-4 flex-1'>
+          <TextField
+            label={'Product name'}
+            {...register('name')}
+            error={formState.errors.name?.message}
+            placeholder='Enter product name...'
+            type='text'
+            required
+          />
+          <TextField
+            {...register('sku')}
+            label={'Sku'}
+            placeholder='Enter sku...'
+            type='text'
+            error={formState.errors.sku?.message}
+          />
+          <TextField
+            {...register('price', {
+              valueAsNumber: true,
             })}
+            label={'Price'}
+            placeholder='Enter price...'
+            type='number'
+            error={formState.errors.price?.message}
           />
-        ) : null}
-        {/* Category, Collections, Brand */}
-        {categoriesLoading ? (
-          <div className='flex justify-center items-center'>
-            <LoadingSpinner />
-          </div>
-        ) : (
-          <StyledComboBoxController
-            control={control}
-            name='productInfo.category'
-            label='Category'
-            error={formState.errors.productInfo?.category?.message}
-            options={
-              categories?.map((e) => ({
-                id: e.id,
-                name: e.name,
-              })) ?? []
-            }
+          <TextField
+            label={'Slug'}
+            placeholder='Enter slug...'
+            type='text'
+            error={formState.errors.slug?.message}
+            {...register('slug')}
           />
-        )}
-        {brandsLoading ? (
-          <div className='flex justify-center items-center'>
-            <LoadingSpinner />
-          </div>
-        ) : (
-          <StyledComboBoxController
-            name='productInfo.brand'
-            nullable
-            control={control}
-            error={formState.errors.productInfo?.brand?.message}
-            label='Brand'
-            options={
-              brands?.map((e) => ({
-                id: e.id,
-                name: e.name,
-              })) ?? []
-            }
+          {attributesLoading ? (
+            <div className='flex justify-center items-center'>
+              <LoadingSpinner />
+            </div>
+          ) : attributes ? (
+            <StyledMultipleComboBox<{
+              id: number;
+              name: string;
+            }>
+              label='Select an attribute'
+              setSelected={(values) => {
+                setValue(
+                  'attributes',
+                  values.map((e) => e.id),
+                  {
+                    shouldDirty: false,
+                  }
+                );
+              }}
+              options={attributes}
+              getDisplayValue={(option) => {
+                return option?.name || '';
+              }}
+              selected={watch('attributes', []).map((e) => {
+                const attribute = attributes.find((a) => a.id === e)!;
+                return {
+                  id: attribute.id,
+                  name: attribute.name,
+                };
+              })}
+            />
+          ) : null}
+          {/* Category, Collections, Brand */}
+          {categoriesLoading ? (
+            <div className='flex justify-center items-center'>
+              <LoadingSpinner />
+            </div>
+          ) : (
+            <StyledComboBoxController
+              control={control}
+              name='category'
+              label='Category'
+              error={formState.errors.category?.message}
+              options={
+                categories?.map((e) => ({
+                  id: e.id,
+                  name: e.name,
+                })) ?? []
+              }
+            />
+          )}
+          {brandsLoading ? (
+            <div className='flex justify-center items-center'>
+              <LoadingSpinner />
+            </div>
+          ) : (
+            <StyledComboBoxController
+              name='brand'
+              nullable
+              control={control}
+              error={formState.errors.brand?.message}
+              label='Brand'
+              options={
+                brands?.map((e) => ({
+                  id: e.id,
+                  name: e.name,
+                })) ?? []
+              }
+            />
+          )}
+          {collectionLoading ? (
+            <div className='flex justify-center items-center'>
+              <LoadingSpinner />
+            </div>
+          ) : (
+            <StyledComboBoxController
+              control={control}
+              name='collection'
+              nullable
+              label='Collection'
+              error={formState.errors.brand?.message}
+              options={
+                collections?.map((e) => ({
+                  id: e.id,
+                  name: e.name,
+                })) ?? []
+              }
+            />
+          )}
+        </div>
+        <div className='w-1/3'>
+          <ImageUploader
+            defaultImage={productDetail?.imageUrl}
+            name='image'
+            label='Upload image'
+            onChange={(newFile) => {
+              setFile(newFile);
+            }}
+            maxFileSizeMB={2.5}
           />
-        )}
-        {collectionLoading ? (
-          <div className='flex justify-center items-center'>
-            <LoadingSpinner />
-          </div>
-        ) : (
-          <StyledComboBoxController
-            control={control}
-            name='productInfo.collection'
-            nullable
-            label='Collection'
-            error={formState.errors.productInfo?.brand?.message}
-            options={
-              collections?.map((e) => ({
-                id: e.id,
-                name: e.name,
-              })) ?? []
-            }
-          />
-        )}
+        </div>
       </div>
       {/* Short Description */}
-      <Field className='w-full mb-4'>
+      <Field className='w-full my-4'>
         <TextField
           label='Short Description'
-          {...register('productInfo.shortDescription')}
+          {...register('shortDescription')}
           placeholder='Enter short product description...'
           type='text'
-          error={formState.errors.productInfo?.shortDescription?.message}
+          error={formState.errors.shortDescription?.message}
           className='w-full'
         />
       </Field>
@@ -221,15 +242,11 @@ export const ProductInfoForm: React.FC<{
       <Field className='w-full'>
         <Label className='font-semibold'>Description</Label>
         <TiptapController
-          name='productInfo.description'
+          name='description'
           control={control}
-          error={formState.errors.productInfo?.description?.message}
+          error={formState.errors.description?.message}
         />
       </Field>
-
-      <div className='mt-6'>
-        <ProductImagesUploader productDetail={productDetail} />
-      </div>
     </>
   );
 };

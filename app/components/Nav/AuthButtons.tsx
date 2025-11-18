@@ -24,6 +24,7 @@ const AuthButtons: React.FC = ({}) => {
     router.refresh();
     redirect('/login');
   };
+
   if (isLoading) {
     return (
       <div className='flex items-center gap-2'>

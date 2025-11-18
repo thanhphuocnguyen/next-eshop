@@ -20,7 +20,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     accept: {
       'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
     },
-
     onDrop: (acceptedFiles) => {
       onUpload(
         acceptedFiles.map((file) =>

@@ -2,23 +2,21 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import React, { useEffect, useState } from 'react';
-import { FormProvider, useForm, useWatch } from 'react-hook-form';
-import { Button, Fieldset, Legend } from '@headlessui/react';
+import { FormProvider, useForm } from 'react-hook-form';
+import { Fieldset, Legend } from '@headlessui/react';
 import { redirect, useRouter } from 'next/navigation';
-import clsx from 'clsx';
-import { ArrowLeftCircleIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftCircleIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import {
   GenericResponse,
-  ProductDetailModel,
+  ManageProductModel,
   ProductFormSchema,
   ProductModelForm,
-  UploadImageResponseModel,
+  ProductModelFormOut,
 } from '@/app/lib/definitions';
 
-import { useProductDetailFormContext } from '../_lib/contexts/ProductFormContext';
 import { ProductInfoForm } from './ProductInfoForm';
-import { VariantInfoForm } from './VariantInfoForm';
+import { ProductFormActions } from './ProductFormActions';
 import { ADMIN_API_PATHS } from '@/app/lib/constants/api';
 import { toast } from 'react-toastify';
 import { ConfirmDialog } from '@/app/components/Common/Dialogs/ConfirmDialog';
@@ -26,8 +24,8 @@ import { KeyedMutator } from 'swr';
 import { clientSideFetch } from '@/app/lib/api/apiClient';
 
 interface ProductEditFormProps {
-  productDetail?: ProductDetailModel;
-  mutate?: KeyedMutator<ProductDetailModel>;
+  productDetail?: ManageProductModel;
+  mutate?: KeyedMutator<ManageProductModel>;
 }
 
 export const ProductDetailForm: React.FC<ProductEditFormProps> = ({
@@ -37,72 +35,50 @@ export const ProductDetailForm: React.FC<ProductEditFormProps> = ({
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { tempProductImages, setTempProductImages } =
-    useProductDetailFormContext();
+  const [file, setFile] = React.useState<File | null>(null);
 
-  const productForm = useForm<ProductModelForm>({
+  const productForm = useForm<ProductModelForm, unknown, ProductModelFormOut>({
     resolver: zodResolver(ProductFormSchema),
     defaultValues: productDetail
       ? {
-          variants: productDetail.variants,
-          productInfo: {
-            category: productDetail.category,
-            attributes: productDetail.attributes,
-            brand: productDetail.brand,
-            collection: productDetail.collection,
-            description: productDetail.description,
-            name: productDetail.name,
-            price: productDetail.price,
-            sku: productDetail.sku,
-            isActive: productDetail.isActive,
-            slug: productDetail.slug,
-            images: productDetail.productImages.map((image) => ({
-              id: image.id,
-              url: image.url,
-              role: image.role,
-              assignments: image.assignments.map((assignment) => assignment.entityId),
-            })),
-          },
+          category: productDetail.category,
+          attributes: productDetail.attributes,
+          brand: productDetail.brand,
+          collection: productDetail.collection,
+          description: productDetail.description,
+          name: productDetail.name,
+          price: productDetail.price,
+          sku: productDetail.sku,
+          isActive: productDetail.isActive,
+          slug: productDetail.slug,
         }
       : {
-          variants: [],
-          productInfo: {
-            brand: {
-              id: '',
-              name: '',
-            },
-            category: {
-              id: '',
-              name: '',
-            },
-            attributes: [],
-            collection: null,
-            description: '',
+          brand: {
+            id: '',
             name: '',
-            sku: '',
-            slug: '',
-            price: 1,
-            isActive: true,
-            images: [],
           },
+          category: {
+            id: '',
+            name: '',
+          },
+          attributes: [],
+          collection: null,
+          description: '',
+          name: '',
+          sku: '',
+          slug: '',
+          price: 1,
+          isActive: true,
         },
   });
 
   const {
     reset,
-    control,
-    formState: { isDirty, isSubmitting, dirtyFields },
+    formState: { isDirty, isSubmitting },
   } = productForm;
-
-  const selectedAttributes = useWatch({
-    control,
-    name: 'productInfo.attributes',
-    defaultValue: [],
-  });
 
   const handleDeleteProduct = async () => {
     if (!productDetail?.id) return;
-
     setIsDeleting(true);
     try {
       const { error } = await clientSideFetch<GenericResponse<unknown>>(
@@ -127,141 +103,16 @@ export const ProductDetailForm: React.FC<ProductEditFormProps> = ({
     }
   };
 
-  useEffect(() => {
-    if (productDetail) {
-      reset({
-        variants: productDetail.variants,
-        productInfo: {
-          category: productDetail.category,
-          brand: productDetail.brand,
-          collection: productDetail.collection,
-          attributes: productDetail.attributes,
-          description: productDetail.description,
-          name: productDetail.name,
-          shortDescription: productDetail.shortDescription,
-          price: productDetail.price,
-          sku: productDetail.sku,
-          isActive: productDetail.isActive,
-          slug: productDetail.slug,
-          images: productDetail.productImages.map((image) => ({
-            id: image.id,
-            url: image.url,
-            role: image.role,
-            assignments: image.assignments.map((assignment) => assignment.entityId),
-          })),
-        },
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productDetail]);
-
-  return (
-    <div className='h-full px-6 py-3 overflow-auto'>
-      <FormProvider {...productForm}>
-        <Fieldset
-          onSubmit={productForm.handleSubmit(submitHandler, console.error)}
-          as='form'
-        >
-          <Link
-            href={'/admin/products'}
-            className='flex items-center mb-2 space-x-2'
-          >
-            <ArrowLeftCircleIcon className='size-6 text-primary' />
-            <span className='text-primary text-lg hover:underline'>
-              Back to Products
-            </span>
-          </Link>
-          <Legend className='text-2xl flex justify-between font-bold text-primary mb-4'>
-            {productDetail ? (
-              <span>Edit Product: {productDetail.name}</span>
-            ) : (
-              <span>Create New Product</span>
-            )}
-            <div className='flex space-x-3'>
-              {productDetail && (
-                <Button
-                  type='button'
-                  disabled={isDeleting}
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className={clsx(
-                    'btn text-lg flex items-center',
-                    isDeleting ? 'btn-disabled' : 'btn-danger'
-                  )}
-                >
-                  <TrashIcon className='h-5 w-5 mr-1' />
-                  {isDeleting ? 'Deleting...' : 'Delete'}
-                </Button>
-              )}
-              <Button
-                disabled={
-                  isSubmitting || (!isDirty && !tempProductImages.length)
-                }
-                type='submit'
-                className={clsx(
-                  'btn text-lg btn-primary',
-                  isSubmitting && 'loading',
-                  isDirty || tempProductImages.length
-                    ? 'btn-primary'
-                    : 'btn-disabled'
-                )}
-              >
-                {isSubmitting ? (
-                  <span>{productDetail ? 'Saving...' : 'Creating...'}</span>
-                ) : (
-                  <span>{productDetail ? 'Save' : 'Create'}</span>
-                )}
-              </Button>
-            </div>
-          </Legend>
-
-          {/* Combined Product Details and Variants Section */}
-          <div className='bg-white rounded-lg shadow-md p-6'>
-            {/* Product Description Header */}
-            <div className='mb-4'>
-              <h2 className='text-xl font-semibold text-gray-700'>
-                Product Details
-              </h2>
-              <p className='text-gray-500 mt-1'>
-                {productDetail
-                  ? 'Edit your product information, variants, and images below.'
-                  : 'Fill in the details to create a new product in your inventory.'}
-              </p>
-            </div>
-
-            <div className='mb-6'>
-              <ProductInfoForm productDetail={productDetail} />
-            </div>
-
-            {/* Product Images */}
-            <hr className='my-8' />
-            {/* Product Variants */}
-            <VariantInfoForm selectedAttributes={selectedAttributes} />
-          </div>
-        </Fieldset>
-      </FormProvider>
-
-      {/* Delete Confirmation Dialog */}
-      <ConfirmDialog
-        open={showDeleteConfirm}
-        title='Delete Product'
-        message={`Are you sure you want to delete "${productDetail?.name}"? This action cannot be undone.`}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={handleDeleteProduct}
-        confirmStyle='bg-red-600 hover:bg-red-700'
-      />
-    </div>
-  );
-
-  async function submitHandler(data: ProductModelForm) {
+  async function submitHandler(data: ProductModelFormOut) {
     let productID = productDetail?.id;
     let isAllSuccess = true;
-    if (dirtyFields.productInfo) {
+    if (isDirty) {
       const rs = await onSubmitProductDetail(data);
       productID = rs;
       isAllSuccess &&= !!rs;
     }
 
-    if (productID && tempProductImages.length) {
+    if (productID && file) {
       const rs = await onUploadImages(productID);
       isAllSuccess &&= rs;
     }
@@ -276,63 +127,40 @@ export const ProductDetailForm: React.FC<ProductEditFormProps> = ({
   }
 
   async function onUploadImages(productId: string) {
-    if (!tempProductImages.length) {
-      return true;
-    }
     const productImageFormData = new FormData();
-    tempProductImages.forEach((obj) => {
-      if (obj) {
-        productImageFormData.append('files', obj.file);
-        productImageFormData.append('roles', obj.role || 'gallery');
-        productImageFormData.append(
-          'assignments[]',
-          JSON.stringify(obj.variantIds)
-        );
+    productImageFormData.append('file', file!);
+    try {
+      const { data } = await clientSideFetch<ProductModelForm>(
+        ADMIN_API_PATHS.PRODUCT_IMAGES_UPLOAD.replaceAll(':id', productId),
+        {
+          method: 'POST',
+          body: productImageFormData,
+        }
+      );
+
+      if (data) {
+        reset((prev) => ({ ...prev,  }));
+        toast.success('Images uploaded successfully');
       }
-    });
-
-    const { error, data } = await clientSideFetch<
-      GenericResponse<UploadImageResponseModel>
-    >(ADMIN_API_PATHS.PRODUCT_IMAGES_UPLOAD.replaceAll(':id', productId), {
-      method: 'POST',
-      body: productImageFormData,
-    });
-
-    if (error) {
+    } catch (error) {
       toast.error('Failed to upload images');
+      console.error(error);
       return false;
     }
-    if (data) {
-      toast.success('Images uploaded successfully');
-      setTempProductImages([]);
-    }
+
     return true;
   }
 
   async function onSubmitProductDetail(
-    payload: ProductModelForm
+    payload: ProductModelFormOut
   ): Promise<string | undefined> {
-    const variants = payload.variants.map((variant) => ({
-      ...variant,
-      attributes: variant.attributes.map((attribute) => ({
-        id: attribute.id,
-        valueId: attribute.valueObject?.id,
-      })),
-    }));
     const { data, error } = await clientSideFetch<{ id: string }>(
       productDetail
         ? ADMIN_API_PATHS.PRODUCT_DETAIL.replace(':id', productDetail.id)
         : ADMIN_API_PATHS.PRODUCTS,
       {
         method: productDetail ? 'PUT' : 'POST',
-        body: {
-          ...payload.productInfo,
-          variants,
-          collectionId: payload.productInfo.collection?.id || null,
-          attributes: payload.productInfo.attributes,
-          brandId: payload.productInfo.brand?.id || null,
-          categoryId: payload.productInfo.category?.id || null,
-        },
+        body: payload,
       }
     );
 
@@ -358,4 +186,90 @@ export const ProductDetailForm: React.FC<ProductEditFormProps> = ({
 
     return data.id;
   }
+
+  useEffect(() => {
+    if (productDetail) {
+      reset({
+        category: productDetail.category,
+        brand: productDetail.brand,
+        collection: productDetail.collection,
+        attributes: productDetail.attributes,
+        description: productDetail.description,
+        name: productDetail.name,
+        shortDescription: productDetail.shortDescription,
+        price: productDetail.price,
+        sku: productDetail.sku,
+        isActive: productDetail.isActive,
+        slug: productDetail.slug,
+      });
+    }
+  }, [productDetail, reset]);
+
+  return (
+    <div className='h-full px-6 py-3 overflow-auto'>
+      <FormProvider {...productForm}>
+        <Fieldset
+          onSubmit={productForm.handleSubmit(submitHandler, console.error)}
+          as='form'
+        >
+          <Link
+            href={'/admin/products'}
+            className='flex items-center mb-2 space-x-2'
+          >
+            <ArrowLeftCircleIcon className='size-6 text-primary' />
+            <span className='text-primary text-lg hover:underline'>
+              Back to Products
+            </span>
+          </Link>
+          <Legend className='text-2xl flex justify-between font-bold text-primary mb-4'>
+            {productDetail ? (
+              <span>Edit Product: {productDetail.name}</span>
+            ) : (
+              <span>Create New Product</span>
+            )}
+            <ProductFormActions
+              productDetail={productDetail}
+              isSubmitting={isSubmitting}
+              isDirty={isDirty || file !== null}
+              isDeleting={isDeleting}
+              onDeleteClick={() => setShowDeleteConfirm(true)}
+            />
+          </Legend>
+
+          {/* Combined Product Details and Variants Section */}
+          <div className='bg-white rounded-lg'>
+            {/* Product Description Header */}
+            <div className='mb-4'>
+              <h2 className='text-xl font-semibold text-gray-700'>
+                Product Details
+              </h2>
+              <p className='text-gray-500 mt-1'>
+                {productDetail
+                  ? 'Edit your product information, variants, and images below.'
+                  : 'Fill in the details to create a new product in your inventory.'}
+              </p>
+            </div>
+
+            <div className='mb-6'>
+              <ProductInfoForm
+                productDetail={productDetail}
+                file={file}
+                setFile={setFile}
+              />
+            </div>
+          </div>
+        </Fieldset>
+      </FormProvider>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title='Delete Product'
+        message={`Are you sure you want to delete "${productDetail?.name}"? This action cannot be undone.`}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteProduct}
+        confirmStyle='bg-red-600 hover:bg-red-700'
+      />
+    </div>
+  );
 };

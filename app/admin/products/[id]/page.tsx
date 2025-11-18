@@ -1,8 +1,8 @@
 'use client';
+
 import LoadingInline from '@/app/components/Common/Loadings/LoadingInline';
 import { use } from 'react';
-import { ProductDetailForm } from '../_components/ProductDetailForm';
-import { ProductDetailFormProvider } from '../_lib/contexts/ProductFormContext';
+import { ProductDetailForm, VariantList } from '../_components';
 import { useProductDetail } from '../../hooks/useProductDetail';
 
 export default function ProductFormEditPage({
@@ -33,10 +33,9 @@ export default function ProductFormEditPage({
   }
 
   return (
-    <div className='h-full overflow-hidden'>
-      <ProductDetailFormProvider>
-        <ProductDetailForm productDetail={productDetail} mutate={mutate} />
-      </ProductDetailFormProvider>
+    <div className='h-full overflow-auto'>
+      <ProductDetailForm productDetail={productDetail} mutate={mutate} />
+      {productDetail && <VariantList productDetail={productDetail} />}
     </div>
   );
 }

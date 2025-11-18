@@ -1,6 +1,6 @@
 import { GeneralCategoryModel } from './category';
-import { ProductDetailModel } from './product';
+import { ManageProductModel } from './product';
 
 export type CollectionDetailModel = GeneralCategoryModel & {
-  products: ProductDetailModel[];
+  products: ManageProductModel[];
 };

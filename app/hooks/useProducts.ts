@@ -1,7 +1,7 @@
 import useSWR from 'swr';
 import { PUBLIC_API_PATHS } from '../lib/constants/api';
 import { clientSideFetch } from '../lib/api/apiClient';
-import { ProductListModel } from '../lib/definitions';
+import { ManageProductListModel } from '../lib/definitions';
 
 export const useProducts = ({
   page,
@@ -15,7 +15,7 @@ export const useProducts = ({
   const { data, isLoading, mutate } = useSWR(
     [PUBLIC_API_PATHS.PRODUCTS, page, limit, debouncedSearch],
     ([url, page, limit, search]) =>
-      clientSideFetch<ProductListModel[]>(
+      clientSideFetch<ManageProductListModel[]>(
         `${url}?page=${page}&pageSize=${limit}&search=${search}`,
         {}
       ).then((res) => {
