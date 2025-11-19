@@ -9,7 +9,7 @@ export const useVariants = (productId: string) => {
     isLoading,
     mutate,
   } = useSWR<VariantDetailModel[]>(
-    ADMIN_API_PATHS.PRODUCT_VARIANTS.replace(':id', productId),
+    ADMIN_API_PATHS.PRODUCT_VARIANTS.replace(':productId', productId),
     (url) =>
       clientSideFetch<VariantDetailModel[]>(url, {
         method: 'GET',

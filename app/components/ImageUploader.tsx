@@ -7,7 +7,6 @@ import ImageEditor from './ImageEditor';
 import clsx from 'clsx';
 
 interface ImageUploaderProps {
-  defaultImage?: string;
   name: string;
   label?: string;
   onChange?: (file: File | null) => void;
@@ -16,20 +15,21 @@ interface ImageUploaderProps {
   height?: number;
   maxFileSizeMB?: number;
   aspectRatio?: number;
+  imageUrl?: string | null;
 }
 
 export default function ImageUploader({
-  defaultImage,
   name,
   label = 'Upload image',
   onChange,
   className = '',
   width,
+  imageUrl,
   height,
   aspectRatio,
   maxFileSizeMB = 5,
 }: ImageUploaderProps) {
-  const [image, setImage] = useState<string | null>(defaultImage || null);
+  const [image, setImage] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState<boolean>(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
@@ -166,7 +166,7 @@ export default function ImageUploader({
               style={{ width: '100%', height: 'auto' }}
               objectFit='cover'
               priority
-              src={image || placeholderImage}
+              src={image ?? imageUrl ?? placeholderImage}
             />
             <Input
               type='file'

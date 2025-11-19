@@ -185,13 +185,16 @@ export const VariantList: React.FC<VariantListProps> = ({
       </div>
 
       {/* Variant Form Dialog */}
-      <VariantFormDialog
-        open={isDialogOpen}
-        variant={selectedVariant}
-        productAttributes={productAttributes}
-        onClose={handleCloseDialog}
-        productId={productDetail.id}
-      />
+      {isDialogOpen && (
+        <VariantFormDialog
+          open={isDialogOpen}
+          variant={selectedVariant}
+          productAttributes={productAttributes}
+          onClose={handleCloseDialog}
+          productId={productDetail.id}
+          basePrice={productDetail.price}
+        />
+      )}
     </div>
   );
 };

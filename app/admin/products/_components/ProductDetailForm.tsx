@@ -20,7 +20,7 @@ import { ProductFormActions } from './ProductFormActions';
 import { ADMIN_API_PATHS } from '@/app/lib/constants/api';
 import { toast } from 'react-toastify';
 import { ConfirmDialog } from '@/app/components/Common/Dialogs/ConfirmDialog';
-import { KeyedMutator } from 'swr';
+import { KeyedMutator, useSWRConfig } from 'swr';
 import { clientSideFetch } from '@/app/lib/api/apiClient';
 
 interface ProductEditFormProps {
@@ -30,12 +30,13 @@ interface ProductEditFormProps {
 
 export const ProductDetailForm: React.FC<ProductEditFormProps> = ({
   productDetail,
-  mutate,
+  mutate: mutateProductDetail,
 }) => {
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [file, setFile] = React.useState<File | null>(null);
+  const { mutate } = useSWRConfig();
 
   const productForm = useForm<ProductModelForm, unknown, ProductModelFormOut>({
     resolver: zodResolver(ProductFormSchema),
@@ -120,8 +121,8 @@ export const ProductDetailForm: React.FC<ProductEditFormProps> = ({
     if (!productDetail && productID) {
       redirect(`/admin/products/${productID}`);
     }
-    if (isAllSuccess && mutate) {
-      await mutate();
+    if (isAllSuccess && mutateProductDetail) {
+      await mutateProductDetail();
     }
     reset();
   }
@@ -139,7 +140,7 @@ export const ProductDetailForm: React.FC<ProductEditFormProps> = ({
       );
 
       if (data) {
-        reset((prev) => ({ ...prev,  }));
+        reset((prev) => ({ ...prev }));
         toast.success('Images uploaded successfully');
       }
     } catch (error) {
@@ -174,16 +175,14 @@ export const ProductDetailForm: React.FC<ProductEditFormProps> = ({
       );
       return undefined;
     }
-    if (data) {
-      toast.success(
-        <div>
-          {productDetail ? 'Updated' : 'Created'} product successfully
-          <br />
-          {data.id}
-        </div>
-      );
-    }
-
+    toast.success(
+      <div>
+        {productDetail ? 'Updated' : 'Created'} product successfully
+        <br />
+        {data.id}
+      </div>
+    );
+    mutate(key => Array.isArray(key) && key[0] === ADMIN_API_PATHS.PRODUCTS);
     return data.id;
   }
 

@@ -89,6 +89,8 @@ export const VariantFormSchema = z.object({
       })
     )
     .transform((v) => v.map((e) => e.id)),
+  imageUrl: z.string().url().nullish(),
+  imageId: z.string().nullish(),
 });
 
 export const ProductFormSchema = z
@@ -149,6 +151,8 @@ export type VariantDetailModel = {
   stock: number;
   sku: string;
   weight: number;
+  imageUrl?: string | null;
+  imageId?: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

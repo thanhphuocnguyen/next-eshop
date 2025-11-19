@@ -33,6 +33,17 @@ export const useProducts = ({
       onError: (err) => {
         throw err;
       },
+      fallbackData: {
+        data: [],
+        pagination: {
+          total: 0,
+          page: 1,
+          pageSize: limit,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      },
     }
   );
   return {

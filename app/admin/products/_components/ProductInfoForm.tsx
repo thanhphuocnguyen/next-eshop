@@ -28,7 +28,6 @@ export const ProductInfoForm: React.FC<{
   const { collections, isLoading: collectionLoading } = useCollections();
   const { brands, isLoading: brandsLoading } = useBrands();
   const { attributes, attributesLoading } = useAttributes();
-
   const { register, control, watch, formState, setValue } = useFormContext<
     ProductModelForm,
     unknown,
@@ -217,7 +216,7 @@ export const ProductInfoForm: React.FC<{
         </div>
         <div className='w-1/3'>
           <ImageUploader
-            defaultImage={productDetail?.imageUrl}
+            imageUrl={productDetail?.imageUrl}
             name='image'
             label='Upload image'
             onChange={(newFile) => {
